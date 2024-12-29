@@ -66,7 +66,7 @@ Apa yang perlu diinstal?
 
 * Clone Repository ini
     ```
-    git clone ~
+    git clone https://github.com/insanansharyrasul/ipb_auto_logbook
     ```
 
 * Python Script
