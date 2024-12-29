@@ -6,8 +6,8 @@ Ini adalah source code untuk mengisi logbook IPB secara automatis dengan menggun
 - [Table of Content](#table-of-content)
 - [Problems](#problems)
 - [Setup](#setup)
-- [Running the script](#running-the-script)
-- [What can i change on the script?](#what-can-i-change-on-the-script)
+- [Running the Script](#running-the-script)
+- [Contributing](#contributing)
 
 # Problems
 
@@ -77,7 +77,7 @@ Apa yang perlu diinstal?
     3. `password` untuk password
     4. `dosen` untuk dosen pembimbing
 
-# Running the script
+# Running the Script
 
 Sesuaikan directory dan jalankan:
 ```
@@ -85,8 +85,10 @@ python3 main.py
 ```
 Script akan berjalan dengan membuka chromium.
 
-# What can i change on the script?
+# Contributing
 
 Script dapat diubah sesuai kebutuhan dengan mempelajari dokumentasi [Playwright documentation](https://playwright.dev/python/docs/intro) 
 
 Browser yang berada pada variable `browser` juga bisa diubah dari `chromium` menjadi `firefox`
+
+Jika terdapat bug, tolong diskusikan di bagian Issues.
