@@ -1,6 +1,7 @@
 import time
 from playwright.sync_api import sync_playwright
 import pandas as pd
+import account_info
 
 def clean_string(input):
     input = input.lower().replace(" ", "")
@@ -9,9 +10,11 @@ def clean_string(input):
 # Input Data (Becareful of password)
 # ! Password 
 df = pd.read_csv('data.csv')
-username = "your_username"
-password = "your_password"
+username = account_info.username_input
+password = account_info.password_input
 dosen = "your_supervisor"
+row_number = "row_number"
+semester = "YYYY/YYYY Semester GANJIL/GENAP"
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless = False, slow_mo = 200)
@@ -28,7 +31,7 @@ with sync_playwright() as p:
     page.get_by_role("link", name=" Kemahasiswaan ").click()
     time.sleep(1)
     page.get_by_role("link", name=" Aktivitas").click()
-    page.get_by_role("row", name="6 2024/2025 Semester Genap").get_by_role("link").nth(2).click()
+    page.get_by_role("row", name=f"{row_number} {semester}").get_by_role("link").nth(2).click()
     page.get_by_text("Tambah").click()
 
     # Logbook 

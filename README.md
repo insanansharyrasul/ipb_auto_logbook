@@ -76,6 +76,10 @@ Apa yang perlu diinstal?
     2. `username` untuk Username IPB
     3. `password` untuk password
     4. `dosen` untuk dosen pembimbing
+    5. `row_number` untuk memfokuskan pada baris ke berapa aktivitas yang ingini diisi logbook-nya
+    6. `semester` untuk memastikan pada semester berapa
+
+    Buat juga file python yang baru bernama `account_info.py` dan isi dengan variabel `username_input` dan `pasword_input` untuk menjaga keamanan data.
 
 # Running the Script
 
