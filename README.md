@@ -19,8 +19,6 @@ Berikut ini masalah yang masih dipertimbangkan:
 3. Pengolahan data untuk diinput harus berupa `.csv` dengan aturan ketat
 4. Dokumentasi harus berbentuk filepath, menyebabkan "dua kali kerja" (Bisa diakali, dengan menyiapkan folder dahulu, lalu meng-copy path nya saja ke Excel/Spreadsheet)
 
-&#x26a0;&#xfe0f; **Hati Hati! Bagi yang langsung meng-copy script yang sudah diubah isinya dan menyebarluaskannya, karena terdapat data penting seperti `password` yang terdapat dalam script.**
-
 # Setup
 
 Apa yang perlu diinstal?
@@ -73,13 +71,13 @@ Apa yang perlu diinstal?
   
     Di bagian paling atas, terdapat variabel yang dapat diganti, menyesuaikan data.
     1. `df` untuk input file `.csv` dan harus berada di directory yang sama
-    2. `username` untuk Username IPB
-    3. `password` untuk password
-    4. `dosen` untuk dosen pembimbing
-    5. `row_number` untuk memfokuskan pada baris ke berapa aktivitas yang ingini diisi logbook-nya
-    6. `semester` untuk memastikan pada semester berapa
+    2. `dosen` untuk dosen pembimbing
+    3. `row_number` untuk memfokuskan pada baris ke berapa aktivitas yang ingini diisi logbook-nya
+    4. `semester` untuk memastikan pada semester berapa
 
-    Buat juga file python yang baru bernama `account_info.py` dan isi dengan variabel `username_input` dan `pasword_input` untuk menjaga keamanan data.
+* Input Informasi akun
+    
+    Setelah semua persyaratan di atas telah diisi, jalan kode python dan isi username serta password.
 
 # Running the Script
 
