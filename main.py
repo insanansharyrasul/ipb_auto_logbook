@@ -1,7 +1,7 @@
 import time
 from playwright.sync_api import sync_playwright
 import pandas as pd
-import account_info
+from getpass import getpass
 
 def clean_string(input):
     input = input.lower().replace(" ", "")
@@ -10,8 +10,8 @@ def clean_string(input):
 # Input Data (Becareful of password)
 # ! Password 
 df = pd.read_csv('data.csv')
-username = account_info.username_input
-password = account_info.password_input
+username = str(input('Username: '))
+password = str(getpass('Password: '))
 dosen = "your_supervisor"
 row_number = "row_number"
 semester = "YYYY/YYYY Semester GANJIL/GENAP"
