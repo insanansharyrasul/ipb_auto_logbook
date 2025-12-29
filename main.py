@@ -7,15 +7,12 @@ import time
 from playwright.sync_api import sync_playwright
 import pandas as pd
 
-# Get the directory where this script is located
 CURRENT_DIR = Path(__file__).parent
-
 
 def clean_string(string):
     """Cleans a string by converting it to lowercase and removing spaces."""
     string = string.lower().replace(" ", "")
     return string
-
 
 # Input Data (Becareful of password)
 # ! Password
