@@ -1,4 +1,3 @@
 tanggal,mulai,selesai,keterangan,file,tipe,lokasi,berita
-12/10/2024,14:03,23:00,keterangan 1,/path/to/picture1.jpg,offline,Lokasi2,kegiatan
-14/10/2024,12:03,14:03,keterangan 2,/path/to/picture2.jpg,online,Lokasi1,ujian
-19/10/2024,11:03,19:03,keterangan 3,/path/to/picture3.jpg,hybrid,Lokasi1,bimbingan
+03/09/2024,20:00,23:00,"Keterangan 1",files/example_file.txt,online,Kos,kegiatan
+06/09/2024,19:00,22:00,"Keterangan 2",files/example_file.txt,online,Kos,kegiatan
