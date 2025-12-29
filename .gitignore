@@ -1,1 +1,13 @@
 __pycache__
+.env
+*.pyc
+.venv/
+venv/
+env/
+.vscode/
+.idea/
+.DS_Store
+
+# Ignore everything inside files/ But explicitly allow example file
+files/*
+!files/example_file.txt
