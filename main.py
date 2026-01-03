@@ -35,7 +35,7 @@ with sync_playwright() as p:
     page.get_by_role("button", name="Masuk").click()
 
     time.sleep(1)
-    page.get_by_role("link", name=" Kemahasiswaan ").click()
+    page.get_by_role("link", name="Kemahasiswaan").click()
     time.sleep(1)
     page.get_by_role("link", name=" Aktivitas").click()
     page.get_by_role("row", name=f"{ROW_NUMBER} {SEMESTER}").get_by_role("link").nth(
@@ -102,7 +102,9 @@ with sync_playwright() as p:
         # File
         page.locator("#File").click()
         time.sleep(1)
-        FILE_PATH = str(CURRENT_DIR / df["file"][i])
+        FILE_PATH = str((CURRENT_DIR / df["file"][i]).resolve())
+        if not Path(FILE_PATH).exists():
+            raise FileNotFoundError(f"File not found: {FILE_PATH}")
         page.locator("#File").set_input_files(FILE_PATH)
 
         page.get_by_role("button", name="Simpan").click()

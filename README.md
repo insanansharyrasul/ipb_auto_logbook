@@ -41,7 +41,7 @@ Apa yang perlu diinstal?
         ```
         pip install -r requirements.txt
         ```
-Note: Jika anda tidak bisa meng-install Playwright dengan mengggunakan Terminal, silahkan install melalui situs resminya [Playwright Installation](https://playwright.dev/docs/intro)
+Note: Jika anda tidak bisa meng-install Playwright dengan mengggunakan Terminal, silahkan install melalui situs resminya [Playwright Installation](https://playwright.dev/python/docs/intro)
 * File CSV
 
     File CSV bisa didapatkan dengan convert `.xlsx` menjadi `.csv` atau google spreadsheet dengan mendownloadnya dalam bentuk CSV dan pastikan separator dalam bentuk `,` bukan `;`.
@@ -52,7 +52,7 @@ Note: Jika anda tidak bisa meng-install Playwright dengan mengggunakan Terminal,
     2. `mulai` (Jam Mulai HH:MM)
     3. `selesai` (Jam Mulai HH:MM)
     4. `keterangan` 
-    5. `file` (Copy full path, sesuaikan dengan OS)
+    5. `file` (Selalu tulis dengan menggunakan format `files/example_file.txt`, dan jangan menggunakan spasi! gunakan underscore jika dibutuhkan)
     6. `tipe` (memiliki isi khusus)
        1. offline
        2. online
@@ -64,6 +64,8 @@ Note: Jika anda tidak bisa meng-install Playwright dengan mengggunakan Terminal,
        3. bimbingan
 
     Semua kolom dan isi khusus harus lowercase, lebih jelas, lihat [data.csv](data.csv)
+
+    Note: Perlu diperhatikan juga bahwa file yang diterima oleh studentportal hanya bisa berbentuk ".png, .jpeg, .jpg, atau .pdf", kami menggunakan ".txt" hanya sebagai contoh
 
 * Clone Repository ini
     ```
