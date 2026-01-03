@@ -16,6 +16,7 @@ sehingga repository ini bisa ditutup kapanpun. Selain itu, script ini masih dala
 Berikut ini masalah yang masih dipertimbangkan:
 1. Pengolahan data untuk diinput harus berupa `.csv` dengan aturan ketat
 2. Dokumentasi harus berbentuk filepath, menyebabkan "dua kali kerja" (Bisa diakali, dengan menyiapkan folder dahulu, lalu meng-copy path nya saja ke Excel/Spreadsheet)
+3. Terkadang ada delay pada saat script mencoba untuk mengklik tombol "Kemahasiswaan", silahkan klik manual dan script akan lanjut lagi secara otomatis.
 
 > [!WARNING]
 > Tolong berhati-hati jika kalian ingin mengubah script secara langsung di code python dan hendak memberikan langsung script nya kepada orang lain, karena terdapat informasi seperti password dan username yang sangat fatal jika diberikan.
@@ -40,6 +41,7 @@ Apa yang perlu diinstal?
         ```
         pip install -r requirements.txt
         ```
+Note: Jika anda tidak bisa meng-install Playwright dengan mengggunakan Terminal, silahkan install melalui situs resminya [Playwright Installation](https://playwright.dev/docs/intro)
 * File CSV
 
     File CSV bisa didapatkan dengan convert `.xlsx` menjadi `.csv` atau google spreadsheet dengan mendownloadnya dalam bentuk CSV dan pastikan separator dalam bentuk `,` bukan `;`.
@@ -72,9 +74,9 @@ Apa yang perlu diinstal?
   
     Di bagian paling atas, terdapat variabel yang dapat diganti, menyesuaikan data.
     1. `df` untuk input file `.csv` dan harus berada di directory yang sama
-    2. `dosen` untuk dosen pembimbing
-    3. `row_number` untuk memfokuskan pada baris ke berapa aktivitas yang ingini diisi logbook-nya
-    4. `semester` untuk memastikan pada semester berapa
+    2. `DOSEN` untuk dosen pembimbing, pastikan sedetail mungkin! Tulis juga NRP nya!
+    3. `ROW_NUMBER` untuk memfokuskan pada baris ke berapa aktivitas yang ingini diisi logbook-nya
+    4. `SEMESTER` untuk memastikan pada semester berapa
 
 * Input Informasi akun
     
