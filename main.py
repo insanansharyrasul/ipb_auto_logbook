@@ -33,11 +33,8 @@ with sync_playwright() as p:
     page.get_by_placeholder("Username").fill(USERNAME)
     page.get_by_placeholder("Password").fill(PASSWORD)
     page.get_by_role("button", name="Masuk").click()
-
-    time.sleep(1)
-    page.get_by_role("link", name="Kemahasiswaan").click()
-    time.sleep(1)
-    page.get_by_role("link", name=" Aktivitas").click()
+    page.wait_for_url("https://studentportal.ipb.ac.id/")
+    page.goto("https://studentportal.ipb.ac.id/Kegiatan/AktivitasKampusMerdeka")
     page.get_by_role("row", name=f"{ROW_NUMBER} {SEMESTER}").get_by_role("link").nth(
         2
     ).click()
