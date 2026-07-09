@@ -16,7 +16,6 @@ sehingga repository ini bisa ditutup kapanpun. Selain itu, script ini masih dala
 Berikut ini masalah yang masih dipertimbangkan:
 1. Pengolahan data untuk diinput harus berupa `.csv` dengan aturan ketat
 2. Dokumentasi harus berbentuk filepath, menyebabkan "dua kali kerja" (Bisa diakali, dengan menyiapkan folder dahulu, lalu meng-copy path nya saja ke Excel/Spreadsheet)
-3. Terkadang ada delay pada saat script mencoba untuk mengklik tombol "Kemahasiswaan", silahkan klik manual dan script akan lanjut lagi secara otomatis.
 
 > [!WARNING]
 > Tolong berhati-hati jika kalian ingin mengubah script secara langsung di code python dan hendak memberikan langsung script nya kepada orang lain, karena terdapat informasi seperti password dan username yang sangat fatal jika diberikan.
@@ -73,16 +72,21 @@ Note: Jika anda tidak bisa meng-install Playwright dengan mengggunakan Terminal,
     ```
 
 * Python Script
-  
-    Di bagian paling atas, terdapat variabel yang dapat diganti, menyesuaikan data.
-    1. `df` untuk input file `.csv` dan harus berada di directory yang sama
-    2. `DOSEN` untuk dosen pembimbing, pastikan sedetail mungkin! Tulis juga NRP nya!
-    3. `ROW_NUMBER` untuk memfokuskan pada baris ke berapa aktivitas yang ingini diisi logbook-nya
-    4. `SEMESTER` untuk memastikan pada semester berapa
+
+    Di bagian paling atas `main.py` terdapat beberapa variabel yang **wajib** kamu ganti dulu, menyesuaikan aktivitas yang mau diisi. Nilai default-nya hanya placeholder, jadi kalau tidak diganti script pasti gagal.
+
+    | Variabel | Isi | Cara mendapatkannya |
+    |----------|-----|---------------------|
+    | `df` | File `.csv` berisi data logbook | Ganti `"data.csv"` kalau nama file-mu berbeda. File harus ada di directory yang sama dengan `main.py`. |
+    | `DOSEN` | Nama Dosen Penggerak | Buka aktivitas target di Student Portal → **Kemahasiswaan → Aktivitas → Log (ikon list) → Tambah**. Salin nama persis seperti tertulis di checkbox "Dosen Penggerak" (misal `"Jeffrey Einstein, S.Komp., Ph.D."`). Cukup nama-nya, NRP boleh diikutkan tapi tidak wajib. |
+    | `ROW_NUMBER` | Angka kolom **No** dari baris aktivitas target | Lihat halaman **Kemahasiswaan → Aktivitas**. Angka pada kolom paling kiri (`No`) di baris aktivitasmu, misal `"6"`. Bukan nomor urut yang kamu hitung sendiri. |
+    | `SEMESTER` | Tahun & semester aktivitas | Sama seperti yang tertera di kolom **Tahun Semester** pada baris aktivitas, misal `"2026/2027 Semester Genap"`. Harus sama persis. |
+
+    > `ROW_NUMBER` dan `SEMESTER` dipakai bersama untuk menemukan baris yang benar (`"<ROW_NUMBER> <SEMESTER>"`), jadi keduanya harus cocok dengan yang ada di tabel Aktivitas.
 
 * Input Informasi akun
-    
-    Setelah semua persyaratan di atas telah diisi, jalan kode python dan isi username serta password.
+
+    Setelah semua variabel di atas terisi, jalankan script lalu masukkan **username** dan **password** Student Portal saat diminta di terminal (password tidak akan terlihat saat diketik). Username & password **tidak** disimpan di dalam kode.
 
 # Running the Script
 
