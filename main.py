@@ -7,16 +7,17 @@ import time
 from playwright.sync_api import sync_playwright
 import pandas as pd
 
-CURRENT_DIR = Path(__file__).parent
+def resolve_to_absolute_path(file_path):
+    """Resolves a file path to an absolute path."""
+    return str((Path(__file__).parent / file_path).resolve())
 
 def clean_string(string):
     """Cleans a string by converting it to lowercase and removing spaces."""
     string = string.lower().replace(" ", "")
     return string
 
-# Input Data (Becareful of password)
-# ! Password
-df = pd.read_csv("data.csv")
+# Input Data (in terminal)
+df = pd.read_csv(resolve_to_absolute_path("data.csv"))
 USERNAME = str(input("Username: "))
 PASSWORD = str(getpass("Password: "))
 DOSEN = "dosen"  # Example: "Jeffrey Einstein, S.Komp., Ph.D."
@@ -97,9 +98,7 @@ with sync_playwright() as p:
         page.get_by_placeholder("Topik").fill(df["keterangan"][i])
 
         # File
-        page.locator("#File").click()
-        time.sleep(1)
-        FILE_PATH = str((CURRENT_DIR / df["file"][i]).resolve())
+        FILE_PATH = resolve_to_absolute_path(df["file"][i])
         if not Path(FILE_PATH).exists():
             raise FileNotFoundError(f"File not found: {FILE_PATH}")
         page.locator("#File").set_input_files(FILE_PATH)
