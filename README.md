@@ -51,7 +51,7 @@ Note: Jika anda tidak bisa meng-install Playwright dengan mengggunakan Terminal,
     2. `mulai` (Jam Mulai HH:MM)
     3. `selesai` (Jam Mulai HH:MM)
     4. `keterangan` 
-    5. `file` (Selalu tulis dengan menggunakan format `files/example_file.txt`, dan jangan menggunakan spasi! gunakan underscore jika dibutuhkan)
+    5. `file` (Selalu tulis dengan menggunakan format `files/example_file.txt`, script akan resolve ke absolute path otomatis menggunakan pathlib)
     6. `tipe` (memiliki isi khusus)
        1. offline
        2. online
