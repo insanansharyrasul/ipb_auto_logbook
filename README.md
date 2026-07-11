@@ -1,105 +1,134 @@
-<h1> IPB-Auto-Logbook </h1>
+<h1> IPB Auto Logbook </h1>
 
-Ini adalah source code untuk mengisi logbook IPB secara automatis dengan menggunakan *[Playwright](https://playwright.dev/python/)* (Python) dan CSV sebagai input logbook
+Automated logbook filler for [IPB University Student Portal](https://studentportal.ipb.ac.id/), powered by _[Playwright](https://playwright.dev/python/)_. Now ships with a desktop GUI (CustomTkinter).
 
-# Table of Content
-- [Table of Content](#table-of-content)
-- [Problems](#problems)
+# Table of Contents
+
+- [Table of Contents](#table-of-contents)
 - [Setup](#setup)
-- [Running the Script](#running-the-script)
+- [Running the App](#running-the-app)
+  - [GUI (recommended)](#gui-recommended)
+  - [CLI](#cli)
+- [Configuration Reference](#configuration-reference)
+- [CSV Format](#csv-format)
+- [Project Structure](#project-structure)
+- [Maintainers](#maintainers)
 - [Contributing](#contributing)
-
-# Problems
-
-Sayangnya, tidak diketahui apakah proses automasi ini akan merusak [studentportal.ipb.ac.id](studentportal.ipb.ac.id),
-sehingga repository ini bisa ditutup kapanpun. Selain itu, script ini masih dalam pengembangan yang kemungkinan masih memiliki bug.
-Berikut ini masalah yang masih dipertimbangkan:
-1. Pengolahan data untuk diinput harus berupa `.csv` dengan aturan ketat
-2. Dokumentasi harus berbentuk filepath, menyebabkan "dua kali kerja" (Bisa diakali, dengan menyiapkan folder dahulu, lalu meng-copy path nya saja ke Excel/Spreadsheet)
-
-> [!WARNING]
-> Tolong berhati-hati jika kalian ingin mengubah script secara langsung di code python dan hendak memberikan langsung script nya kepada orang lain, karena terdapat informasi seperti password dan username yang sangat fatal jika diberikan.
+- [License](#license)
 
 # Setup
 
-Apa yang perlu diinstal?
-* Python (3.10.12)
-* Install packages 
-    * Manual:
-        * Playwright
-            ```
-            pip3 install playwright
-            pip3 install pytest-playwright
-            playwright install
-            ```
-        * Pandas
-            ```
-            pip3 install pandas
-            ```
-    * `requirements.txt`:
-        ```
-        pip install -r requirements.txt
-        ```
-Note: Jika anda tidak bisa meng-install Playwright dengan mengggunakan Terminal, silahkan install melalui situs resminya [Playwright Installation](https://playwright.dev/python/docs/intro)
-* File CSV
+### 1. Install dependencies
 
-    File CSV bisa didapatkan dengan convert `.xlsx` menjadi `.csv` atau google spreadsheet dengan mendownloadnya dalam bentuk CSV dan pastikan separator dalam bentuk `,` bukan `;`.
-
-    Kolom dari file csv harus berisikan:
-
-    1. `tanggal` (Tanggal Kegiatan, format DD/MM/YY)
-    2. `mulai` (Jam Mulai HH:MM)
-    3. `selesai` (Jam Mulai HH:MM)
-    4. `keterangan` 
-    5. `file` (Selalu tulis dengan menggunakan format `files/example_file.txt`, script akan resolve ke absolute path otomatis menggunakan pathlib)
-    6. `tipe` (memiliki isi khusus)
-       1. offline
-       2. online
-       3. hybrid
-    7. `lokasi`
-    8. `berita` (memiliki is khusus)
-       1. kegiatan
-       2. ujian
-       3. bimbingan
-
-    Semua kolom dan isi khusus harus lowercase, lebih jelas, lihat [data.csv](data.csv)
-
-    Note: Perlu diperhatikan juga bahwa file yang diterima oleh studentportal hanya bisa berbentuk ".png, .jpeg, .jpg, atau .pdf", kami menggunakan ".txt" hanya sebagai contoh
-
-* Clone Repository ini
-    ```
-    git clone https://github.com/insanansharyrasul/ipb_auto_logbook
-    ```
-
-* Python Script
-
-    Di bagian paling atas `main.py` terdapat beberapa variabel yang **wajib** kamu ganti dulu, menyesuaikan aktivitas yang mau diisi. Nilai default-nya hanya placeholder, jadi kalau tidak diganti script pasti gagal.
-
-    | Variabel | Isi | Cara mendapatkannya |
-    |----------|-----|---------------------|
-    | `df` | File `.csv` berisi data logbook | Ganti `"data.csv"` kalau nama file-mu berbeda. File harus ada di directory yang sama dengan `main.py`. |
-    | `DOSEN` | Nama Dosen Penggerak | Buka aktivitas target di Student Portal → **Kemahasiswaan → Aktivitas → Log (ikon list) → Tambah**. Salin nama persis seperti tertulis di checkbox "Dosen Penggerak" (misal `"Jeffrey Einstein, S.Komp., Ph.D."`). Cukup nama-nya, NRP boleh diikutkan tapi tidak wajib. |
-    | `ROW_NUMBER` | Angka kolom **No** dari baris aktivitas target | Lihat halaman **Kemahasiswaan → Aktivitas**. Angka pada kolom paling kiri (`No`) di baris aktivitasmu, misal `"6"`. Bukan nomor urut yang kamu hitung sendiri. |
-    | `SEMESTER` | Tahun & semester aktivitas | Sama seperti yang tertera di kolom **Tahun Semester** pada baris aktivitas, misal `"2026/2027 Semester Genap"`. Harus sama persis. |
-
-    > `ROW_NUMBER` dan `SEMESTER` dipakai bersama untuk menemukan baris yang benar (`"<ROW_NUMBER> <SEMESTER>"`), jadi keduanya harus cocok dengan yang ada di tabel Aktivitas.
-
-* Input Informasi akun
-
-    Setelah semua variabel di atas terisi, jalankan script lalu masukkan **username** dan **password** Student Portal saat diminta di terminal (password tidak akan terlihat saat diketik). Username & password **tidak** disimpan di dalam kode.
-
-# Running the Script
-
-Sesuaikan directory dan jalankan:
+```bash
+pip install -r requirements.txt
+playwright install
 ```
-python3 main.py
+
+### 2. Prepare CSV file
+
+Convert your `.xlsx` or Google Spreadsheet to CSV (separator `,` not `;`). See [CSV Format](#csv-format) below for column requirements.
+
+### 3. Clone the repository
+
+```bash
+git clone https://github.com/insanansharyrasul/ipb_auto_logbook.git
+cd ipb_auto_logbook
 ```
-Script akan berjalan dengan membuka chromium.
+
+> [!WARNING]
+> Never share your Python scripts directly with others as they may contain your username and password. Use the GUI's config fields instead credentials are never saved to disk and never sent over the network outside the student portal pages.
+
+# Running the App
+
+## GUI (recommended)
+
+```bash
+python gui_app.py
+```
+
+A desktop window opens with 4 tabs:
+
+| Tab               | Purpose                                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Configuration** | Enter Portal username/password, Dosen, Row Number, Semester, CSV path. Hover the ⓘ icons for guidance on each field. |
+| **Logbook Data**  | Edit your logbook entries in a table. Load CSV, add/delete rows, browse for files.                                   |
+| **Run**           | Start/stop automation with live progress bar and log output.                                                         |
+| **About**         | Version info, maintainers, and license.                                                                              |
+
+Fill in the Configuration tab, load your CSV in Logbook Data, then switch to Run and start.
+
+## CLI
+
+```bash
+python main.py
+```
+
+Edit variables at the top of `main.py` first:
+
+| Variable     | Description                                                       |
+| ------------ | ----------------------------------------------------------------- |
+| `df`         | Path to your `.csv` file (default: `"data.csv"`)                  |
+| `DOSEN`      | Dosen Penggerak name exactly as shown in the portal               |
+| `ROW_NUMBER` | The **No** column value of your activity row (not a manual count) |
+| `SEMESTER`   | Academic year & semester, e.g. `"2026/2027 Semester Genap"`       |
+
+You'll be prompted for username and password in the terminal at runtime.
+
+# Configuration Reference
+
+| Field          | Where to find it                                                                                                                                                                              |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dosen**      | Student Portal → Kemahasiswaan → Aktivitas → Log (list icon) → Tambah. Copy the name exactly from the "Dosen Penggerak" checkbox, e.g. `"Jeffrey Einstein, S.Komp., Ph.D."`. NRP is optional. |
+| **Row Number** | Kemahasiswaan → Aktivitas page. The number in the leftmost `No` column of your target activity row. Use the displayed number, not a manual row count.                                         |
+| **Semester**   | Same page, the `Tahun Semester` column. Must match exactly, e.g. `"2026/2027 Semester Genap"`.                                                                                                |
+
+> `ROW_NUMBER` and `SEMESTER` are combined to locate the correct row on the Aktivitas table (`"<ROW_NUMBER> <SEMESTER>"`).
+
+# CSV Format
+
+8 columns, all values lowercase:
+
+| Column       | Description                        | Example                |
+| ------------ | ---------------------------------- | ---------------------- |
+| `tanggal`    | Date (DD/MM/YYYY)                  | `12/04/2026`           |
+| `mulai`      | Start time (HH:MM)                 | `08:00`                |
+| `selesai`    | End time (HH:MM)                   | `10:00`                |
+| `keterangan` | Description / topic                | `Observasi dan Survei` |
+| `file`       | Relative path under `files/`       | `files/bukti.png`      |
+| `tipe`       | `offline` / `online` / `hybrid`    | `offline`              |
+| `lokasi`     | Location                           | `Kos`                  |
+| `berita`     | `kegiatan` / `ujian` / `bimbingan` | `kegiatan`             |
+
+Accepted file formats for upload: `.png`, `.jpeg`, `.jpg`, `.pdf`. The app resolves relative paths to absolute paths automatically.
+
+See [data.csv](data.csv) for a complete example.
+
+# Project Structure
+
+```
+├── gui_app.py              # Desktop GUI entry point
+├── main.py                 # CLI entry point
+├── src/
+│   ├── automator.py        # Playwright automation core
+│   └── gui/                # GUI components (modular mixins)
+│       ├── _constants.py   # Shared constants & info texts
+│       ├── _widgets.py     # Reusable widgets (info tooltips)
+│       ├── _config_mixin.py
+│       ├── _data_mixin.py
+│       ├── _run_mixin.py
+│       └── _about_mixin.py
+├── files/                  # Upload files directory
+├── data.csv                # Example CSV input
+└── requirements.txt
+```
 
 # Contributing
 
-Script dapat diubah sesuai kebutuhan dengan mempelajari dokumentasi [Playwright documentation](https://playwright.dev/python/docs/intro) 
+The browser engine can be switched from `chromium` to `firefox` in `src/automator.py`. See the [Playwright documentation](https://playwright.dev/python/docs/intro) for details.
 
-Browser yang berada pada variable `browser` juga bisa diubah dari `chromium` menjadi `firefox`
+GUI components are organized as mixins in `src/gui/` with each tab is self-contained. To add a new tab, create a new mixin and inherit it in `LogbookApp`.
 
-Jika terdapat bug, tolong diskusikan di bagian Issues.
+# License
+
+[GNU General Public License v3.0](LICENSE)
