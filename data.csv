@@ -1,3 +1,4 @@
-tanggal,mulai,selesai,keterangan,file,tipe,lokasi,berita
-03/09/2024,20:00,23:00,"Keterangan 1",files/example_file.txt,online,Kos,kegiatan
-06/09/2024,19:00,22:00,"Keterangan 2",files/example_file.txt,online,Kos,kegiatan
+tanggal,mulai,selesai,jenis_kegiatan,keterangan,file,tipe,lokasi,berita
+03/09/2024,20:00,23:00,"kegiatan",Keterangan 1",files/example_file.txt,online,Kos,kegiatan
+06/09/2024,19:00,22:00,"bimbingan","Keterangan 2",files/example_file.txt,online,Kos,kegiatan
+09/09/2024,17:00,18:00,"ujian","Keterangan 2",files/example_file.txt,online,Kos,kegiatan

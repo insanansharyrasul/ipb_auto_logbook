@@ -1,105 +1,138 @@
-<h1> IPB-Auto-Logbook </h1>
+# IPB-Auto-Logbook
 
-Ini adalah source code untuk mengisi logbook IPB secara automatis dengan menggunakan *[Playwright](https://playwright.dev/python/)* (Python) dan CSV sebagai input logbook
+Ini adalah source code untuk mengisi logbook IPB secara otomatis menggunakan **[Playwright](https://playwright.dev/python/)** (Python) dengan file CSV sebagai input logbook.
 
 # Table of Content
-- [Table of Content](#table-of-content)
-- [Problems](#problems)
-- [Setup](#setup)
-- [Running the Script](#running-the-script)
-- [Contributing](#contributing)
+
+* [Table of Content](#table-of-content)
+* [Problems](#problems)
+* [Setup](#setup)
+* [Running the Script](#running-the-script)
+* [Contributing](#contributing)
 
 # Problems
 
-Sayangnya, tidak diketahui apakah proses automasi ini akan merusak [studentportal.ipb.ac.id](studentportal.ipb.ac.id),
-sehingga repository ini bisa ditutup kapanpun. Selain itu, script ini masih dalam pengembangan yang kemungkinan masih memiliki bug.
-Berikut ini masalah yang masih dipertimbangkan:
-1. Pengolahan data untuk diinput harus berupa `.csv` dengan aturan ketat
-2. Dokumentasi harus berbentuk filepath, menyebabkan "dua kali kerja" (Bisa diakali, dengan menyiapkan folder dahulu, lalu meng-copy path nya saja ke Excel/Spreadsheet)
+Sayangnya, belum diketahui apakah proses automasi ini akan berdampak pada **studentportal.ipb.ac.id**, sehingga repository ini bisa saja ditutup kapan pun. Selain itu, script ini masih dalam tahap pengembangan sehingga kemungkinan masih memiliki bug.
+
+Beberapa keterbatasan yang masih perlu diperhatikan:
+
+1. Data input harus berupa file `.csv` dengan format yang telah ditentukan.
+2. Dokumentasi harus berupa filepath sehingga pengguna perlu menyiapkan file dokumentasi terlebih dahulu (misalnya dengan membuat folder khusus, lalu menyalin path file ke spreadsheet).
 
 > [!WARNING]
-> Tolong berhati-hati jika kalian ingin mengubah script secara langsung di code python dan hendak memberikan langsung script nya kepada orang lain, karena terdapat informasi seperti password dan username yang sangat fatal jika diberikan.
+> Jika ingin mengubah script Python secara langsung dan membagikannya kepada orang lain, pastikan tidak ada informasi sensitif seperti username atau password yang ikut terbagikan.
 
 # Setup
 
-Apa yang perlu diinstal?
+## Yang perlu diinstal
+
 * Python (3.10.12)
-* Install packages 
-    * Manual:
-        * Playwright
-            ```
-            pip3 install playwright
-            pip3 install pytest-playwright
-            playwright install
-            ```
-        * Pandas
-            ```
-            pip3 install pandas
-            ```
-    * `requirements.txt`:
-        ```
-        pip install -r requirements.txt
-        ```
-Note: Jika anda tidak bisa meng-install Playwright dengan mengggunakan Terminal, silahkan install melalui situs resminya [Playwright Installation](https://playwright.dev/python/docs/intro)
-* File CSV
 
-    File CSV bisa didapatkan dengan convert `.xlsx` menjadi `.csv` atau google spreadsheet dengan mendownloadnya dalam bentuk CSV dan pastikan separator dalam bentuk `,` bukan `;`.
+* Install package
 
-    Kolom dari file csv harus berisikan:
+  **Manual**
 
-    1. `tanggal` (Tanggal Kegiatan, format DD/MM/YY)
-    2. `mulai` (Jam Mulai HH:MM)
-    3. `selesai` (Jam Mulai HH:MM)
-    4. `keterangan` 
-    5. `file` (Selalu tulis dengan menggunakan format `files/example_file.txt`, script akan resolve ke absolute path otomatis menggunakan pathlib)
-    6. `tipe` (memiliki isi khusus)
-       1. offline
-       2. online
-       3. hybrid
-    7. `lokasi`
-    8. `berita` (memiliki is khusus)
-       1. kegiatan
-       2. ujian
-       3. bimbingan
+  **Playwright**
 
-    Semua kolom dan isi khusus harus lowercase, lebih jelas, lihat [data.csv](data.csv)
+  ```bash
+  pip3 install playwright
+  pip3 install pytest-playwright
+  playwright install
+  ```
 
-    Note: Perlu diperhatikan juga bahwa file yang diterima oleh studentportal hanya bisa berbentuk ".png, .jpeg, .jpg, atau .pdf", kami menggunakan ".txt" hanya sebagai contoh
+  **Pandas**
 
-* Clone Repository ini
-    ```
-    git clone https://github.com/insanansharyrasul/ipb_auto_logbook
-    ```
+  ```bash
+  pip3 install pandas
+  ```
 
-* Python Script
+  **Menggunakan requirements.txt**
 
-    Di bagian paling atas `main.py` terdapat beberapa variabel yang **wajib** kamu ganti dulu, menyesuaikan aktivitas yang mau diisi. Nilai default-nya hanya placeholder, jadi kalau tidak diganti script pasti gagal.
+  ```bash
+  pip install -r requirements.txt
+  ```
 
-    | Variabel | Isi | Cara mendapatkannya |
-    |----------|-----|---------------------|
-    | `df` | File `.csv` berisi data logbook | Ganti `"data.csv"` kalau nama file-mu berbeda. File harus ada di directory yang sama dengan `main.py`. |
-    | `DOSEN` | Nama Dosen Penggerak | Buka aktivitas target di Student Portal → **Kemahasiswaan → Aktivitas → Log (ikon list) → Tambah**. Salin nama persis seperti tertulis di checkbox "Dosen Penggerak" (misal `"Jeffrey Einstein, S.Komp., Ph.D."`). Cukup nama-nya, NRP boleh diikutkan tapi tidak wajib. |
-    | `ROW_NUMBER` | Angka kolom **No** dari baris aktivitas target | Lihat halaman **Kemahasiswaan → Aktivitas**. Angka pada kolom paling kiri (`No`) di baris aktivitasmu, misal `"6"`. Bukan nomor urut yang kamu hitung sendiri. |
-    | `SEMESTER` | Tahun & semester aktivitas | Sama seperti yang tertera di kolom **Tahun Semester** pada baris aktivitas, misal `"2026/2027 Semester Genap"`. Harus sama persis. |
+> Jika Playwright tidak dapat di-install melalui terminal, silakan ikuti panduan resmi di https://playwright.dev/python/docs/intro.
 
-    > `ROW_NUMBER` dan `SEMESTER` dipakai bersama untuk menemukan baris yang benar (`"<ROW_NUMBER> <SEMESTER>"`), jadi keduanya harus cocok dengan yang ada di tabel Aktivitas.
+## File CSV
 
-* Input Informasi akun
+File CSV dapat dibuat dengan:
 
-    Setelah semua variabel di atas terisi, jalankan script lalu masukkan **username** dan **password** Student Portal saat diminta di terminal (password tidak akan terlihat saat diketik). Username & password **tidak** disimpan di dalam kode.
+* Mengubah file `.xlsx` menjadi `.csv`.
+* Mengunduh Google Spreadsheet sebagai file CSV.
+
+Pastikan separator yang digunakan adalah **`,`** dan bukan **`;`**.
+
+Kolom CSV harus memiliki urutan berikut:
+
+| Kolom            | Keterangan                                                                                                                                                                        |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tanggal`        | Tanggal kegiatan (format `DD/MM/YY`)                                                                                                                                              |
+| `mulai`          | Jam mulai (`HH:MM`)                                                                                                                                                               |
+| `selesai`        | Jam selesai (`HH:MM`)                                                                                                                                                             |
+| `keterangan`     | Deskripsi kegiatan                                                                                                                                                                |
+| `file`           | Path file dokumentasi. Gunakan format seperti `files/example_file.pdf`. Script akan mengubahnya menjadi absolute path menggunakan `pathlib`.                                      |
+| `tipe`           | Jenis pelaksanaan kegiatan. Nilai yang diperbolehkan: `offline`, `online`, `hybrid`.                                                                                              |
+| `jenis_kegiatan` | Jenis aktivitas yang akan dipilih pada Student Portal. Nilai harus sesuai dengan pilihan yang tersedia pada portal (contoh: `rutin`, `kepanitiaan`, dan lainnya sesuai dropdown). |
+| `lokasi`         | Lokasi kegiatan                                                                                                                                                                   |
+| `berita`         | Jenis berita acara. Nilai yang diperbolehkan: `kegiatan`, `ujian`, `bimbingan`.                                                                                                   |
+
+Semua nama kolom dan nilai khusus harus menggunakan huruf **lowercase**.
+
+Contoh dapat dilihat pada file `data.csv`.
+
+> **Catatan**
+>
+> Student Portal hanya menerima file dokumentasi dengan format:
+>
+> * `.png`
+> * `.jpg`
+> * `.jpeg`
+> * `.pdf`
+>
+> File `.txt` pada repository ini hanya digunakan sebagai contoh.
+
+## Clone Repository
+
+```bash
+git clone https://github.com/insanansharyrasul/ipb_auto_logbook
+```
+
+## Konfigurasi Script
+
+Di bagian paling atas `main.py` terdapat beberapa variabel yang **wajib** diubah terlebih dahulu.
+
+| Variabel     | Isi                               | Cara mendapatkannya                                                                                                                                                            |
+| ------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `df`         | File `.csv` berisi data logbook   | Ganti `"data.csv"` jika menggunakan nama file lain. File harus berada pada folder yang sama dengan `main.py`.                                                                  |
+| `DOSEN`      | Nama Dosen Penggerak              | Buka aktivitas target di Student Portal → **Kemahasiswaan → Aktivitas → Log (ikon list) → Tambah**. Salin nama persis seperti yang tertulis pada checkbox **Dosen Penggerak**. |
+| `ROW_NUMBER` | Nomor pada kolom **No** aktivitas | Ambil dari halaman **Kemahasiswaan → Aktivitas** pada kolom paling kiri.                                                                                                       |
+| `SEMESTER`   | Tahun & semester aktivitas        | Harus sama persis dengan yang tampil pada kolom **Tahun Semester**.                                                                                                            |
+
+> `ROW_NUMBER` dan `SEMESTER` digunakan bersama untuk menemukan aktivitas yang benar (`"<ROW_NUMBER> <SEMESTER>"`), sehingga keduanya harus sesuai dengan yang ada di Student Portal.
+
+## Input Informasi Akun
+
+Setelah konfigurasi selesai, jalankan script.
+
+Masukkan **username** dan **password** Student Portal ketika diminta melalui terminal. Password tidak akan ditampilkan saat diketik dan tidak disimpan di dalam source code.
 
 # Running the Script
 
-Sesuaikan directory dan jalankan:
-```
+Jalankan script dengan:
+
+```bash
 python3 main.py
 ```
-Script akan berjalan dengan membuka chromium.
+
+Script akan membuka browser Chromium dan mulai mengisi logbook secara otomatis.
 
 # Contributing
 
-Script dapat diubah sesuai kebutuhan dengan mempelajari dokumentasi [Playwright documentation](https://playwright.dev/python/docs/intro) 
+Script dapat dimodifikasi sesuai kebutuhan dengan mempelajari dokumentasi resmi Playwright:
 
-Browser yang berada pada variable `browser` juga bisa diubah dari `chromium` menjadi `firefox`
+https://playwright.dev/python/docs/intro
 
-Jika terdapat bug, tolong diskusikan di bagian Issues.
+Browser yang digunakan juga dapat diubah dari `chromium` menjadi `firefox`.
+
+Apabila menemukan bug atau memiliki usulan perbaikan, silakan membuat diskusi pada halaman **Issues** repository.
