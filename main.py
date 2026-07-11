@@ -7,14 +7,17 @@ import time
 from playwright.sync_api import sync_playwright
 import pandas as pd
 
+
 def resolve_to_absolute_path(file_path):
     """Resolves a file path to an absolute path."""
     return str((Path(__file__).parent / file_path).resolve())
+
 
 def clean_string(string):
     """Cleans a string by converting it to lowercase and removing spaces."""
     string = string.lower().replace(" ", "")
     return string
+
 
 # Input Data (in terminal)
 df = pd.read_csv(resolve_to_absolute_path("data.csv"))
