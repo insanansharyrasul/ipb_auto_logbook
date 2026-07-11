@@ -201,8 +201,13 @@ class LogbookAutomator:
             page.wait_for_url(self.PORTAL_HOME, timeout=15000)
             self._log_cb("✅ Login successful")
             return True
-        except Exception as e:
-            self._log_cb(f"❌ Login failed: {e}")
+        except Exception:
+            error = page.get_by_text("Login gagal. Username atau password Anda salah.")
+            try:
+                error.wait_for(state="visible", timeout=2000)
+                self._log_cb("❌ Login failed: Username atau password Anda salah.")
+            except Exception:
+                self._log_cb("❌ Login failed: Could not reach portal.")
             return False
 
     def _navigate_to_form(self, page) -> bool:
