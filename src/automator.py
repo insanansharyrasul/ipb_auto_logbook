@@ -41,9 +41,9 @@ class LogbookConfig:
 
     username: str
     password: str
-    dosen: str  
-    row_number: str  
-    semester: str 
+    dosen: str
+    row_number: str
+    semester: str
     csv_path: str = "data.csv"
     headless: bool = False
     slow_mo: int = 200

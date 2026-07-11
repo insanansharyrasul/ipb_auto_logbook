@@ -54,13 +54,21 @@ DOSEN_INFO: str = (
     "Kemahasiswaan → Aktivitas → Log (ikon list) → Tambah.\n"
     "Contoh: 'Jeffrey Einstein, S.Komp., Ph.D.'."
 )
-ROW_NUMBER_INFO: str = (
-    "Angka di kolom 'No' pada halaman Kemahasiswaan → Aktivitas."
-)
+ROW_NUMBER_INFO: str = "Angka di kolom 'No' pada halaman Kemahasiswaan → Aktivitas."
 SEMESTER_INFO: str = (
     "Tahun & semester sesuai kolom 'Tahun Semester'.\n"
     "Contoh: '2026/2027 Semester Genap'."
 )
+
+# Version
+APP_VERSION: str = "1.0.0"
+
+# Maintainers (name and its github profile link)
+APP_MAINTAINERS: list[str] = [
+    "Insan Anshary Rasul (https://github.com/insanansharyrasul)",
+    "Aghnat Hasya Sayyidina (https://github.com/aghnaths)",
+    "Rafif Muhammad Faras (https://github.com/Raphcel)",
+]
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -83,7 +91,7 @@ class LogbookApp(ctk.CTk):
         super().__init__()
 
         # -- window ------------------------------------------------------------------
-        self.title("IPB Auto Logbook")
+        self.title(f"IPB Auto Logbook v{APP_VERSION}")
         self.geometry("900x700")
         self.minsize(800, 600)
 
@@ -102,6 +110,7 @@ class LogbookApp(ctk.CTk):
         self._build_config_tab()
         self._build_data_tab()
         self._build_run_tab()
+        self._build_about_tab()
 
         # -- close handling ----------------------------------------------------------
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -120,6 +129,7 @@ class LogbookApp(ctk.CTk):
         self._tab_config = self._tabview.add("Configuration")
         self._tab_data = self._tabview.add("Logbook Data")
         self._tab_run = self._tabview.add("Run")
+        self._tab_about = self._tabview.add("About")
 
         self._tabview.set("Configuration")
 
@@ -252,9 +262,7 @@ class LogbookApp(ctk.CTk):
 
         return frame
 
-    def _show_info_tooltip(
-        self, anchor_widget: ctk.CTkLabel, info_text: str
-    ) -> None:
+    def _show_info_tooltip(self, anchor_widget: ctk.CTkLabel, info_text: str) -> None:
         """Show a borderless tooltip below *anchor_widget* on hover."""
         self._hide_info_tooltip()
 
@@ -329,9 +337,9 @@ class LogbookApp(ctk.CTk):
         toolbar = ctk.CTkFrame(parent, fg_color="transparent")
         toolbar.pack(fill="x", padx=10, pady=(10, 4))
 
-        ctk.CTkButton(toolbar, text="Load CSV from config", width=100, command=self._load_csv).pack(
-            side="left", padx=(0, 6)
-        )
+        ctk.CTkButton(
+            toolbar, text="Load CSV from config", width=100, command=self._load_csv
+        ).pack(side="left", padx=(0, 6))
         ctk.CTkButton(toolbar, text="Add Row", width=90, command=self._add_row).pack(
             side="left", padx=(0, 6)
         )
@@ -585,6 +593,54 @@ class LogbookApp(ctk.CTk):
         # -- log output -------------------------------------------------------------
         self._log_box = ctk.CTkTextbox(parent, wrap="word", state="disabled")
         self._log_box.grid(row=2, column=0, sticky="nsew", padx=10, pady=(0, 10))
+
+    # =======================================================================
+    # Tab 4 — About
+    # =======================================================================
+
+    def _build_about_tab(self) -> None:
+        parent = self._tab_about
+        parent.grid_columnconfigure(0, weight=1)
+
+        PX, PY = 20, 8
+
+        ctk.CTkLabel(
+            parent,
+            text=f"IPB Auto Logbook v{APP_VERSION}",
+            font=ctk.CTkFont(size=22, weight="bold"),
+        ).grid(row=0, column=0, padx=PX, pady=(24, 2), sticky="w")
+
+        ctk.CTkLabel(
+            parent,
+            text="Automated logbook filler for IPB University Student Portal",
+            font=ctk.CTkFont(size=13),
+        ).grid(row=1, column=0, padx=PX, pady=(0, PY), sticky="w")
+
+        ctk.CTkFrame(parent, height=1, fg_color=("gray70", "gray40")).grid(
+            row=3, column=0, sticky="ew", padx=PX, pady=(0, 12)
+        )
+
+        entries = (
+            ("Contributors",
+             "\n".join(APP_MAINTAINERS)),
+            ("Original repository",
+             "github.com/insanansharyrasul/ipb_auto_logbook"),
+            ("License",
+             "GNU General Public License v3.0"),
+        )
+        for i, (title, value) in enumerate(entries):
+            base = 4 + i * 2
+            ctk.CTkLabel(
+                parent,
+                text=title,
+                font=ctk.CTkFont(size=12, weight="bold"),
+            ).grid(row=base, column=0, padx=PX, pady=(6, 0), sticky="w")
+            ctk.CTkLabel(
+                parent,
+                text=value,
+                font=ctk.CTkFont(size=12),
+                text_color=("gray50", "gray60"),
+            ).grid(row=base + 1, column=0, padx=PX, pady=(0, 12), sticky="w")
 
     # =======================================================================
     # Run orchestration
