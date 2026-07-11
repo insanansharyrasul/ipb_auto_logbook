@@ -225,16 +225,6 @@ class LogbookApp(ctk.CTk):
         ctk.CTkLabel(spin_frame, text="(50–500)").pack(side="left", padx=6)
         row += 1
 
-        # --- buttons ----------------------------------------------------------------
-        btn_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        btn_frame.grid(row=row, column=0, columnspan=2, pady=16, sticky="w", padx=10)
-        ctk.CTkButton(
-            btn_frame, text="Save Config", width=130, command=self._save_config
-        ).pack(side="left", padx=(0, 10))
-        ctk.CTkButton(
-            btn_frame, text="Load Config", width=130, command=self._load_config
-        ).pack(side="left")
-
     # -------------------------------------------------------------------
     # Info icon helpers
     # -------------------------------------------------------------------
@@ -319,22 +309,6 @@ class LogbookApp(ctk.CTk):
             slow_mo=slow_mo,
         )
 
-    def _apply_config(self, cfg: LogbookConfig) -> None:
-        self._ent_username.delete(0, "end")
-        self._ent_username.insert(0, cfg.username)
-        self._ent_password.delete(0, "end")
-        self._ent_password.insert(0, cfg.password)
-        self._ent_dosen.delete(0, "end")
-        self._ent_dosen.insert(0, cfg.dosen)
-        self._ent_row.delete(0, "end")
-        self._ent_row.insert(0, cfg.row_number)
-        self._ent_semester.delete(0, "end")
-        self._ent_semester.insert(0, cfg.semester)
-        self._ent_csv.delete(0, "end")
-        self._ent_csv.insert(0, cfg.csv_path)
-        self._var_headless.set(cfg.headless)
-        self._var_slowmo.set(str(cfg.slow_mo))
-
     def _browse_csv(self) -> None:
         path = filedialog.askopenfilename(
             title="Select CSV file",
@@ -343,34 +317,6 @@ class LogbookApp(ctk.CTk):
         if path:
             self._ent_csv.delete(0, "end")
             self._ent_csv.insert(0, path)
-
-    def _save_config(self) -> None:
-        path = filedialog.asksaveasfilename(
-            title="Save configuration",
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
-        )
-        if not path:
-            return
-        try:
-            self._gather_config().save_to_file(path)
-            self._log(f"Config saved to {path}")
-        except Exception as e:
-            self._log(f"Failed to save config: {e}")
-
-    def _load_config(self) -> None:
-        path = filedialog.askopenfilename(
-            title="Load configuration",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
-        )
-        if not path:
-            return
-        try:
-            cfg = LogbookConfig.load_from_file(path)
-            self._apply_config(cfg)
-            self._log(f"Config loaded from {path} (password cleared)")
-        except Exception as e:
-            self._log(f"Failed to load config: {e}")
 
     # =======================================================================
     # Tab 2 — Logbook Data (editable table)
@@ -383,7 +329,7 @@ class LogbookApp(ctk.CTk):
         toolbar = ctk.CTkFrame(parent, fg_color="transparent")
         toolbar.pack(fill="x", padx=10, pady=(10, 4))
 
-        ctk.CTkButton(toolbar, text="Load CSV", width=100, command=self._load_csv).pack(
+        ctk.CTkButton(toolbar, text="Load CSV from config", width=100, command=self._load_csv).pack(
             side="left", padx=(0, 6)
         )
         ctk.CTkButton(toolbar, text="Add Row", width=90, command=self._add_row).pack(
