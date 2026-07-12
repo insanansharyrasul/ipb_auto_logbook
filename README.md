@@ -5,6 +5,7 @@ Automated logbook filler for [IPB University Student Portal](https://studentport
 # Table of Contents
 
 - [Table of Contents](#table-of-contents)
+- [Requested Feature](#requested-feature)
 - [Setup](#setup)
 - [Running the App](#running-the-app)
   - [GUI (recommended)](#gui-recommended)
@@ -16,6 +17,12 @@ Automated logbook filler for [IPB University Student Portal](https://studentport
 - [Contributing](#contributing)
 - [License](#license)
 
+# Requested Feature
+
+There are people that are requesting for:
+1. A comprehensive visual walkthrough covering environment setup, installation, and core application usage.
+2. A tool/script to automatically generate synthetic data.csv datasets, pre-populated with realistic metrics like requested hours, contextual logs, and system metadata.
+    
 # Setup
 
 ### 1. Install dependencies
