@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PyQt6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
 
-from src.gui._constants import APP_MAINTAINERS, APP_VERSION
+from src.gui._constants import APP_MAINTAINERS, APP_VERSION, APP_DONATORS
 
 
 class AboutTabMixin:
@@ -33,6 +33,7 @@ class AboutTabMixin:
 
         entries = (
             ("Contributors", "\n".join(APP_MAINTAINERS)),
+            ("Donators", "\n".join(APP_DONATORS)),
             ("Original repository", "github.com/insanansharyrasul/ipb_auto_logbook"),
             ("License", "GNU General Public License v3.0"),
         )

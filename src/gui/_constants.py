@@ -33,3 +33,7 @@ APP_MAINTAINERS: list[str] = [
     "Aghnat Hasya Sayyidina (https://github.com/aghnaths)",
     "Rafif Muhammad Faras (https://github.com/Raphcel)",
 ]
+
+APP_DONATORS: list[str] = [
+    "Walid Nadirul Ahnaf (https://github.com/walidan-nadilaw)"
+]
