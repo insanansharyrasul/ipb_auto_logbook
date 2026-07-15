@@ -2,12 +2,27 @@
 
 from __future__ import annotations
 
-from tkinter import filedialog
-
-import customtkinter as ctk
+from PyQt6.QtWidgets import (
+    QCheckBox,
+    QFileDialog,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from src.automator import LogbookConfig
 from src.gui._constants import DOSEN_INFO, ROW_NUMBER_INFO, SEMESTER_INFO
+
+
+def _section(text: str) -> QLabel:
+    lbl = QLabel(text)
+    lbl.setStyleSheet("font-size: 14px; font-weight: bold; margin-top: 10px;")
+    return lbl
 
 
 class ConfigTabMixin:
@@ -18,151 +33,102 @@ class ConfigTabMixin:
     # ------------------------------------------------------------------
 
     def _build_config_tab(self) -> None:
-        parent = self._tab_config
-        parent.grid_columnconfigure(1, weight=1)
-
-        row = 0
-        pad = {"padx": 10, "pady": 6, "sticky": "w"}
+        page = QWidget()
+        root = QVBoxLayout(page)
+        root.setContentsMargins(14, 14, 14, 14)
+        root.setSpacing(4)
 
         # --- Account -----------------------------------------------------
-        ctk.CTkLabel(
-            parent, text="Account", font=ctk.CTkFont(size=14, weight="bold")
-        ).grid(row=row, column=0, columnspan=2, padx=10, pady=(10, 2), sticky="w")
-        row += 1
-
-        ctk.CTkLabel(parent, text="Username").grid(row=row, column=0, **pad)
-        self._ent_username = ctk.CTkEntry(parent, width=280, placeholder_text="")
-        self._ent_username.grid(row=row, column=1, **pad)
-        row += 1
-
-        ctk.CTkLabel(parent, text="Password").grid(row=row, column=0, **pad)
-        self._ent_password = ctk.CTkEntry(
-            parent, width=280, show="*", placeholder_text=""
-        )
-        self._ent_password.grid(row=row, column=1, **pad)
-        row += 1
+        root.addWidget(_section("Account"))
+        account = QFormLayout()
+        self._ent_username = QLineEdit()
+        self._ent_password = QLineEdit()
+        self._ent_password.setEchoMode(QLineEdit.EchoMode.Password)
+        account.addRow("Username", self._ent_username)
+        account.addRow("Password", self._ent_password)
+        root.addLayout(account)
 
         # --- Logbook -----------------------------------------------------
-        ctk.CTkLabel(
-            parent, text="Logbook", font=ctk.CTkFont(size=14, weight="bold")
-        ).grid(row=row, column=0, columnspan=2, padx=10, pady=(14, 2), sticky="w")
-        row += 1
-
-        self._make_label_with_info(parent, "Dosen", DOSEN_INFO).grid(
-            row=row, column=0, **pad
+        root.addWidget(_section("Logbook"))
+        logbook = QFormLayout()
+        self._ent_dosen = QLineEdit()
+        self._ent_row = QLineEdit()
+        self._ent_semester = QLineEdit()
+        logbook.addRow(self._make_label_with_info("Dosen", DOSEN_INFO), self._ent_dosen)
+        logbook.addRow(
+            self._make_label_with_info("Row Number", ROW_NUMBER_INFO), self._ent_row
         )
-        self._ent_dosen = ctk.CTkEntry(parent, width=400, placeholder_text="")
-        self._ent_dosen.grid(row=row, column=1, **pad)
-        row += 1
-
-        self._make_label_with_info(parent, "Row Number", ROW_NUMBER_INFO).grid(
-            row=row, column=0, **pad
+        logbook.addRow(
+            self._make_label_with_info("Semester", SEMESTER_INFO), self._ent_semester
         )
-        self._ent_row = ctk.CTkEntry(parent, width=120, placeholder_text="")
-        self._ent_row.grid(row=row, column=1, **pad)
-        row += 1
-
-        self._make_label_with_info(parent, "Semester", SEMESTER_INFO).grid(
-            row=row, column=0, **pad
-        )
-        self._ent_semester = ctk.CTkEntry(parent, width=400, placeholder_text="")
-        self._ent_semester.grid(row=row, column=1, **pad)
-        row += 1
+        root.addLayout(logbook)
 
         # --- Data Source -------------------------------------------------
-        ctk.CTkLabel(
-            parent, text="Data Source", font=ctk.CTkFont(size=14, weight="bold")
-        ).grid(row=row, column=0, columnspan=2, padx=10, pady=(14, 2), sticky="w")
-        row += 1
-
-        ctk.CTkLabel(parent, text="CSV File").grid(row=row, column=0, **pad)
-        csv_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        csv_frame.grid(row=row, column=1, sticky="ew", padx=10, pady=6)
-        csv_frame.grid_columnconfigure(0, weight=1)
-        self._ent_csv = ctk.CTkEntry(csv_frame, placeholder_text="")
-        self._ent_csv.grid(row=0, column=0, sticky="ew", padx=(0, 6))
-        self._ent_csv.insert(0, "data.csv")
-        ctk.CTkButton(
-            csv_frame, text="Browse", width=80, command=self._browse_csv
-        ).grid(row=0, column=1)
-        row += 1
+        root.addWidget(_section("Data Source"))
+        self._ent_csv = QLineEdit("data.csv")
+        browse = QPushButton("Browse")
+        browse.clicked.connect(self._browse_csv)
+        csv_row = QHBoxLayout()
+        csv_row.addWidget(self._ent_csv, 1)
+        csv_row.addWidget(browse)
+        data_form = QFormLayout()
+        data_form.addRow("CSV File", csv_row)
+        root.addLayout(data_form)
 
         # --- Options -----------------------------------------------------
-        ctk.CTkLabel(
-            parent, text="Options", font=ctk.CTkFont(size=14, weight="bold")
-        ).grid(row=row, column=0, columnspan=2, padx=10, pady=(14, 2), sticky="w")
-        row += 1
+        root.addWidget(_section("Options"))
+        self._chk_headless = QCheckBox("Headless (no browser window)")
+        root.addWidget(self._chk_headless)
 
-        self._var_headless = ctk.BooleanVar(value=False)
-        ctk.CTkCheckBox(
-            parent,
-            text="Headless (no browser window)",
-            variable=self._var_headless,
-        ).grid(row=row, column=1, **pad)
-        row += 1
-
-        ctk.CTkLabel(parent, text="Slow Mo (ms)").grid(row=row, column=0, **pad)
-        spin_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        spin_frame.grid(row=row, column=1, sticky="w", padx=10, pady=6)
-        self._var_slowmo = ctk.StringVar(value="200")
-        ctk.CTkEntry(
-            spin_frame,
-            width=80,
-            textvariable=self._var_slowmo,
-            placeholder_text="",
-        ).pack(side="left")
-        ctk.CTkLabel(spin_frame, text="(50–500)").pack(side="left", padx=6)
-        row += 1
+        self._spin_slowmo = QSpinBox()
+        self._spin_slowmo.setRange(50, 500)
+        self._spin_slowmo.setSingleStep(50)
+        self._spin_slowmo.setValue(200)
+        slowmo_form = QFormLayout()
+        slowmo_form.addRow("Slow Mo (ms)", self._spin_slowmo)
+        root.addLayout(slowmo_form)
 
         # --- Config file -------------------------------------------------
-        cfg_btns = ctk.CTkFrame(parent, fg_color="transparent")
-        cfg_btns.grid(
-            row=row, column=0, columnspan=2, padx=10, pady=(16, 6), sticky="w"
-        )
-        ctk.CTkButton(
-            cfg_btns, text="Save Config", width=110, command=self._save_config
-        ).pack(side="left", padx=(0, 6))
-        ctk.CTkButton(
-            cfg_btns, text="Load Config", width=110, command=self._load_config
-        ).pack(side="left")
+        cfg_btns = QHBoxLayout()
+        btn_save = QPushButton("Save Config")
+        btn_save.clicked.connect(self._save_config)
+        btn_load = QPushButton("Load Config")
+        btn_load.clicked.connect(self._load_config)
+        cfg_btns.addWidget(btn_save)
+        cfg_btns.addWidget(btn_load)
+        cfg_btns.addStretch(1)
+        root.addSpacing(10)
+        root.addLayout(cfg_btns)
+
+        root.addStretch(1)
+        self._tabview.addTab(page, "Configuration")
 
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
 
     def _gather_config(self) -> LogbookConfig:
-        slow_mo_str = self._var_slowmo.get().strip()
-        try:
-            slow_mo = int(slow_mo_str)
-        except ValueError:
-            slow_mo = 200
-        slow_mo = max(50, min(500, slow_mo))
-
         return LogbookConfig(
-            username=self._ent_username.get().strip(),
-            password=self._ent_password.get().strip(),
-            dosen=self._ent_dosen.get().strip(),
-            row_number=self._ent_row.get().strip(),
-            semester=self._ent_semester.get().strip(),
-            csv_path=self._ent_csv.get().strip(),
-            headless=self._var_headless.get(),
-            slow_mo=slow_mo,
+            username=self._ent_username.text().strip(),
+            password=self._ent_password.text().strip(),
+            dosen=self._ent_dosen.text().strip(),
+            row_number=self._ent_row.text().strip(),
+            semester=self._ent_semester.text().strip(),
+            csv_path=self._ent_csv.text().strip(),
+            headless=self._chk_headless.isChecked(),
+            slow_mo=self._spin_slowmo.value(),
         )
 
     def _browse_csv(self) -> None:
-        path = filedialog.askopenfilename(
-            title="Select CSV file",
-            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select CSV file", "", "CSV files (*.csv);;All files (*)"
         )
         if path:
-            self._ent_csv.delete(0, "end")
-            self._ent_csv.insert(0, path)
+            self._ent_csv.setText(path)
 
     def _save_config(self) -> None:
-        path = filedialog.asksaveasfilename(
-            title="Save config",
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save config", "config.json", "JSON files (*.json);;All files (*)"
         )
         if not path:
             return
@@ -173,9 +139,8 @@ class ConfigTabMixin:
             self._log(f"Failed to save config: {e}")
 
     def _load_config(self) -> None:
-        path = filedialog.askopenfilename(
-            title="Load config",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Load config", "", "JSON files (*.json);;All files (*)"
         )
         if not path:
             return
@@ -186,15 +151,11 @@ class ConfigTabMixin:
             self._log(f"Failed to load config: {e}")
 
     def _apply_config(self, cfg: LogbookConfig) -> None:
-        for entry, value in (
-            (self._ent_username, cfg.username),
-            (self._ent_password, cfg.password),  # blank — not saved to disk
-            (self._ent_dosen, cfg.dosen),
-            (self._ent_row, cfg.row_number),
-            (self._ent_semester, cfg.semester),
-            (self._ent_csv, cfg.csv_path),
-        ):
-            entry.delete(0, "end")
-            entry.insert(0, value)
-        self._var_headless.set(cfg.headless)
-        self._var_slowmo.set(str(cfg.slow_mo))
+        self._ent_username.setText(cfg.username)
+        self._ent_password.setText(cfg.password)  # blank — not saved to disk
+        self._ent_dosen.setText(cfg.dosen)
+        self._ent_row.setText(cfg.row_number)
+        self._ent_semester.setText(cfg.semester)
+        self._ent_csv.setText(cfg.csv_path)
+        self._chk_headless.setChecked(cfg.headless)
+        self._spin_slowmo.setValue(cfg.slow_mo)

@@ -12,7 +12,7 @@
 from PyInstaller.utils.hooks import collect_all
 
 datas, binaries, hiddenimports = [], [], []
-for pkg in ("playwright", "customtkinter"):  # both ship data files PyInstaller misses
+for pkg in ("playwright"):
     d, b, h = collect_all(pkg)
     datas += d
     binaries += b

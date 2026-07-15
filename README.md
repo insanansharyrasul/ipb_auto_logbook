@@ -1,6 +1,6 @@
 <h1> IPB Auto Logbook </h1>
 
-Automated logbook filler for [IPB University Student Portal](https://studentportal.ipb.ac.id/), powered by _[Playwright](https://playwright.dev/python/)_. Now ships with a desktop GUI (CustomTkinter).
+Automated logbook filler for [IPB University Student Portal](https://studentportal.ipb.ac.id/), powered by _[Playwright](https://playwright.dev/python/)_. Now ships with a desktop GUI (PyQt6).
 
 # Table of Contents
 
