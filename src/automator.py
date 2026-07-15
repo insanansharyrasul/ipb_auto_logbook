@@ -1,5 +1,6 @@
 """Core logbook automation logic for IPB Student Portal."""
 
+import sys
 import threading
 import time
 from dataclasses import dataclass
@@ -10,10 +11,20 @@ import pandas as pd
 from playwright.sync_api import sync_playwright
 
 
+def _base_dir() -> Path:
+    """Directory that holds user data (data.csv, files/).
+
+    Frozen exe: the folder the .exe sits in, so users edit data next to it.
+    Dev: the project root.
+    """
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).parent
+    return Path(__file__).parent.parent
+
+
 def resolve_to_absolute_path(file_path: str) -> str:
-    """Resolve a path relative to the project root to an absolute path."""
-    project_root = Path(__file__).parent.parent
-    return str((project_root / file_path).resolve())
+    """Resolve a path relative to the user-data dir to an absolute path."""
+    return str((_base_dir() / file_path).resolve())
 
 
 def clean_string(string: str) -> str:
@@ -324,4 +335,9 @@ if __name__ == "__main__":
     assert loaded.headless == cfg.headless
     assert loaded.slow_mo == cfg.slow_mo
     assert loaded.password == "", "password must never be persisted"
+
+    # Dev-mode base dir resolves under the project root, not sys.executable.
+    assert resolve_to_absolute_path("data.csv").endswith("data.csv")
+    assert Path(resolve_to_absolute_path("data.csv")).parent == Path(__file__).parent.parent
+
     print("self-check OK: config round-trip preserved (password excluded)")
