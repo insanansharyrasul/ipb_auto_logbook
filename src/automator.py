@@ -296,3 +296,32 @@ class LogbookAutomator:
 
     def _click_save(self, page) -> None:
         page.get_by_role("button", name="Simpan").click()
+
+
+if __name__ == "__main__":
+    # Self-check: config save/load round-trip (used by the GUI Save/Load buttons).
+    import tempfile
+
+    cfg = LogbookConfig(
+        username="alice",
+        password="secret",
+        dosen="Jeffrey Einstein, S.Komp., Ph.D.",
+        row_number="1",
+        semester="2026/2027 Semester Genap",
+        csv_path="data.csv",
+        headless=True,
+        slow_mo=123,
+    )
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        cfg.save_to_file(f.name)
+        loaded = LogbookConfig.load_from_file(f.name)
+
+    assert loaded.username == cfg.username
+    assert loaded.dosen == cfg.dosen
+    assert loaded.row_number == cfg.row_number
+    assert loaded.semester == cfg.semester
+    assert loaded.csv_path == cfg.csv_path
+    assert loaded.headless == cfg.headless
+    assert loaded.slow_mo == cfg.slow_mo
+    assert loaded.password == "", "password must never be persisted"
+    print("self-check OK: config round-trip preserved (password excluded)")

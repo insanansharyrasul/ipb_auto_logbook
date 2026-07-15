@@ -148,12 +148,7 @@ class DataTabMixin:
     def _clear_table(self) -> None:
         for row_data in self._table_rows:
             for w in row_data.values():
-                if isinstance(w, ctk.CTkEntry):
-                    w.destroy()
-                elif isinstance(w, ctk.CTkComboBox):
-                    w.destroy()
-                elif isinstance(w, ctk.CTkFrame):
-                    w.destroy()
+                w.destroy()
         self._table_rows.clear()
 
     def _populate_table(self, df: pd.DataFrame) -> None:
@@ -187,12 +182,7 @@ class DataTabMixin:
             return
         row_data = self._table_rows.pop()
         for w in row_data.values():
-            if isinstance(w, ctk.CTkEntry):
-                w.destroy()
-            elif isinstance(w, ctk.CTkComboBox):
-                w.destroy()
-            elif isinstance(w, ctk.CTkFrame):
-                w.destroy()
+            w.destroy()
 
     def _gather_table_data(self) -> list[dict[str, str]]:
         rows: list[dict[str, str]] = []

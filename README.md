@@ -71,16 +71,18 @@ Fill in the Configuration tab, load your CSV in Logbook Data, then switch to Run
 python main.py
 ```
 
-Edit variables at the top of `main.py` first:
+The CLI prompts for everything at runtime — no source editing:
 
-| Variable     | Description                                                       |
+| Prompt       | Description                                                       |
 | ------------ | ----------------------------------------------------------------- |
-| `df`         | Path to your `.csv` file (default: `"data.csv"`)                  |
-| `DOSEN`      | Dosen Penggerak name exactly as shown in the portal               |
-| `ROW_NUMBER` | The **No** column value of your activity row (not a manual count) |
-| `SEMESTER`   | Academic year & semester, e.g. `"2026/2027 Semester Genap"`       |
+| Username     | Portal username                                                   |
+| Password     | Portal password (hidden input)                                    |
+| Dosen        | Dosen Penggerak name exactly as shown in the portal               |
+| Row Number   | The **No** column value of your activity row (not a manual count) |
+| Semester     | Academic year & semester, e.g. `2026/2027 Semester Genap`         |
+| CSV file     | Path to your `.csv` (default: `data.csv`)                         |
 
-You'll be prompted for username and password in the terminal at runtime.
+Both the CLI and GUI share the same automation core in `src/automator.py`.
 
 # Configuration Reference
 
