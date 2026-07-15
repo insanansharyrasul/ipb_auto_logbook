@@ -5,6 +5,9 @@ on:
     tags: ["v*"]        # tag a release, e.g. `git tag v1.0.0 && git push --tags`
   workflow_dispatch: {}  # or run manually from the Actions tab
 
+permissions:
+  contents: write   # required for action-gh-release to create/attach the release
+
 jobs:
   build:
     runs-on: windows-latest
