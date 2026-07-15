@@ -112,6 +112,19 @@ class ConfigTabMixin:
             placeholder_text="",
         ).pack(side="left")
         ctk.CTkLabel(spin_frame, text="(50–500)").pack(side="left", padx=6)
+        row += 1
+
+        # --- Config file -------------------------------------------------
+        cfg_btns = ctk.CTkFrame(parent, fg_color="transparent")
+        cfg_btns.grid(
+            row=row, column=0, columnspan=2, padx=10, pady=(16, 6), sticky="w"
+        )
+        ctk.CTkButton(
+            cfg_btns, text="Save Config", width=110, command=self._save_config
+        ).pack(side="left", padx=(0, 6))
+        ctk.CTkButton(
+            cfg_btns, text="Load Config", width=110, command=self._load_config
+        ).pack(side="left")
 
     # ------------------------------------------------------------------
     # Helpers
@@ -144,3 +157,44 @@ class ConfigTabMixin:
         if path:
             self._ent_csv.delete(0, "end")
             self._ent_csv.insert(0, path)
+
+    def _save_config(self) -> None:
+        path = filedialog.asksaveasfilename(
+            title="Save config",
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+        try:
+            self._gather_config().save_to_file(path)
+            self._log(f"Saved config to {path} (password excluded)")
+        except Exception as e:
+            self._log(f"Failed to save config: {e}")
+
+    def _load_config(self) -> None:
+        path = filedialog.askopenfilename(
+            title="Load config",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+        try:
+            self._apply_config(LogbookConfig.load_from_file(path))
+            self._log(f"Loaded config from {path} (re-enter password)")
+        except Exception as e:
+            self._log(f"Failed to load config: {e}")
+
+    def _apply_config(self, cfg: LogbookConfig) -> None:
+        for entry, value in (
+            (self._ent_username, cfg.username),
+            (self._ent_password, cfg.password),  # blank — not saved to disk
+            (self._ent_dosen, cfg.dosen),
+            (self._ent_row, cfg.row_number),
+            (self._ent_semester, cfg.semester),
+            (self._ent_csv, cfg.csv_path),
+        ):
+            entry.delete(0, "end")
+            entry.insert(0, value)
+        self._var_headless.set(cfg.headless)
+        self._var_slowmo.set(str(cfg.slow_mo))
