@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import csv
 from typing import Any
 
-import pandas as pd
 from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -142,12 +142,12 @@ class DataTabMixin:
                 w.deleteLater()
         self._table_rows.clear()
 
-    def _populate_table(self, df: pd.DataFrame) -> None:
+    def _populate_table(self, rows: list[dict[str, str]]) -> None:
         self._clear_table()
-        for i in range(df.shape[0]):
+        for i, row in enumerate(rows):
             row_data = self._make_row_widgets(grid_row=i + 1)  # row 0 is the header
             for col_name in CSV_COLUMNS:
-                value = str(df[col_name].iloc[i]) if col_name in df.columns else ""
+                value = str(row.get(col_name) or "")
                 widget = row_data[col_name]
                 if isinstance(widget, QLineEdit):
                     widget.setText(value)
@@ -200,10 +200,11 @@ class DataTabMixin:
 
         try:
             abs_path = resolve_to_absolute_path(path)
-            df = pd.read_csv(abs_path)
-            self._populate_table(df)
+            with open(abs_path, newline="", encoding="utf-8") as f:
+                rows = list(csv.DictReader(f))
+            self._populate_table(rows)
             self._ensure_min_rows()
-            self._log(f"Loaded {df.shape[0]} rows from {path}")
+            self._log(f"Loaded {len(rows)} rows from {path}")
         except Exception as e:
             self._log(f"Failed to load CSV: {e}")
 
@@ -215,8 +216,10 @@ class DataTabMixin:
             return
         try:
             data = self._gather_table_data()
-            df = pd.DataFrame(data, columns=CSV_COLUMNS)
-            df.to_csv(path, index=False)
+            with open(path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
+                writer.writeheader()
+                writer.writerows(data)
             self._log(f"Saved {len(data)} rows to {path}")
         except Exception as e:
             self._log(f"Failed to save CSV: {e}")

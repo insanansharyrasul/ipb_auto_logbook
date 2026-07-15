@@ -2,17 +2,13 @@
 #
 #   pyinstaller ipb_auto_logbook.spec
 #
-# Chromium must be installed INTO the playwright package first, so it gets
-# bundled by collect_all('playwright'):
-#
-#   PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium
-#
-# See .github/workflows/build-windows.yml for the full recipe.
+# No Chromium is bundled: the app drives the user's system Edge/Chrome
+# (see Automator._launch_browser). Only Playwright's own driver is collected.
 
 from PyInstaller.utils.hooks import collect_all
 
 datas, binaries, hiddenimports = [], [], []
-for pkg in ("playwright"):
+for pkg in ("playwright",):
     d, b, h = collect_all(pkg)
     datas += d
     binaries += b
@@ -25,8 +21,8 @@ a = Analysis(
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
-    runtime_hooks=["pyi_rth_playwright.py"],
-    excludes=[],
+    runtime_hooks=[],
+    excludes=["pandas", "numpy", "tkinter"],
     noarchive=False,
 )
 pyz = PYZ(a.pure)
