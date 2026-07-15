@@ -85,8 +85,12 @@ class DataTabMixin:
             cells.append(w)
 
         # plain text columns
-        for col, name in ((0, "tanggal"), (1, "mulai"), (2, "selesai"),
-                          (3, "keterangan")):
+        for col, name in (
+            (0, "tanggal"),
+            (1, "mulai"),
+            (2, "selesai"),
+            (3, "keterangan"),
+        ):
             w = QLineEdit()
             place(col, w)
             widgets[name] = w

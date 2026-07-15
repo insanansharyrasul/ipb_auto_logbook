@@ -356,6 +356,9 @@ if __name__ == "__main__":
 
     # Dev-mode base dir resolves under the project root, not sys.executable.
     assert resolve_to_absolute_path("data.csv").endswith("data.csv")
-    assert Path(resolve_to_absolute_path("data.csv")).parent == Path(__file__).parent.parent
+    assert (
+        Path(resolve_to_absolute_path("data.csv")).parent
+        == Path(__file__).parent.parent
+    )
 
     print("self-check OK: config round-trip preserved (password excluded)")

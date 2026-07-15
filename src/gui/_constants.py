@@ -34,6 +34,4 @@ APP_MAINTAINERS: list[str] = [
     "Rafif Muhammad Faras (https://github.com/Raphcel)",
 ]
 
-APP_DONATORS: list[str] = [
-    "Walid Nadirul Ahnaf (https://github.com/walidan-nadilaw)"
-]
+APP_DONATORS: list[str] = ["Walid Nadirul Ahnaf (https://github.com/walidan-nadilaw)"]
