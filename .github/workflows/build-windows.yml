@@ -23,14 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
 
-      - name: Install Chromium into the playwright package
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: "0"   # bundle it, don't use the machine cache
-        run: playwright install chromium
-
       - name: Build exe
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: "0"
         run: pyinstaller ipb_auto_logbook.spec
 
       - name: Stage user-editable data next to the exe

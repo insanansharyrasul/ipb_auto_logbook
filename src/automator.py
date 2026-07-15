@@ -1,5 +1,6 @@
 """Core logbook automation logic for IPB Student Portal."""
 
+import csv
 import sys
 import threading
 import time
@@ -7,7 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional
 
-import pandas as pd
 from playwright.sync_api import sync_playwright
 
 
@@ -117,8 +117,13 @@ class LogbookAutomator:
         self._running = True
 
         try:
-            df = pd.read_csv(resolve_to_absolute_path(self.config.csv_path))
-            total = df.shape[0]
+            with open(
+                resolve_to_absolute_path(self.config.csv_path),
+                newline="",
+                encoding="utf-8",
+            ) as f:
+                rows = list(csv.DictReader(f))
+            total = len(rows)
         except Exception as e:
             self._log_cb(f"❌ Failed to read CSV: {e}")
             self._running = False
@@ -126,10 +131,7 @@ class LogbookAutomator:
 
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(
-                    headless=self.config.headless,
-                    slow_mo=self.config.slow_mo,
-                )
+                browser = self._launch_browser(p)
                 page = browser.new_page()
 
                 if not self._login(page):
@@ -149,15 +151,16 @@ class LogbookAutomator:
                         self._running = False
                         return False
 
+                    r = rows[i]
                     row = LogbookRow(
-                        tanggal=str(df["tanggal"][i]),
-                        mulai=str(df["mulai"][i]),
-                        selesai=str(df["selesai"][i]),
-                        keterangan=str(df["keterangan"][i]),
-                        file=str(df["file"][i]),
-                        tipe=str(df["tipe"][i]),
-                        lokasi=str(df["lokasi"][i]),
-                        berita=str(df["berita"][i]),
+                        tanggal=str(r.get("tanggal") or ""),
+                        mulai=str(r.get("mulai") or ""),
+                        selesai=str(r.get("selesai") or ""),
+                        keterangan=str(r.get("keterangan") or ""),
+                        file=str(r.get("file") or ""),
+                        tipe=str(r.get("tipe") or ""),
+                        lokasi=str(r.get("lokasi") or ""),
+                        berita=str(r.get("berita") or ""),
                     )
 
                     self._progress_cb(i, total, f"Filling entry {i + 1}/{total}...")
@@ -201,6 +204,21 @@ class LogbookAutomator:
     # ------------------------------------------------------------------
     # Steps
     # ------------------------------------------------------------------
+
+    def _launch_browser(self, p):
+        """Use the system Edge/Chrome instead of a bundled Chromium."""
+        for channel in ("msedge", "chrome"):
+            try:
+                return p.chromium.launch(
+                    channel=channel,
+                    headless=self.config.headless,
+                    slow_mo=self.config.slow_mo,
+                )
+            except Exception:
+                continue
+        raise RuntimeError(
+            "No Microsoft Edge or Google Chrome found. Please install one of them."
+        )
 
     def _login(self, page) -> bool:
         self._log_cb("Logging in...")
