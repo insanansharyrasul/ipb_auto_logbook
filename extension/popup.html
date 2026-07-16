@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>IPB Auto Logbook Companion</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 24px;
+      font-family: 'Outfit', sans-serif;
+      background: #0f1115;
+      color: #e2e8f0;
+      box-sizing: border-box;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .logo-container {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    
+    .logo-container svg {
+      width: 32px;
+      height: 32px;
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    h2 {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(to right, #3b82f6, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0 0 20px 0;
+    }
+    
+    .desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #94a3b8;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    .instruction-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 20px;
+    }
+    
+    .instruction-card ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .instruction-card li {
+      margin-bottom: 8px;
+    }
+    
+    .instruction-card li:last-child {
+      margin-bottom: 0;
+    }
+    
+    .btn {
+      width: 100%;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    
+    .btn:hover {
+      background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+    }
+    
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: #ffffff;
+      stroke-width: 2.5;
+      fill: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      <svg viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+    </div>
+    
+    <h2>IPB Auto Logbook</h2>
+    <div class="subtitle">Extension Companion</div>
+    
+    <div class="desc">
+      A lightweight in-browser automation helper. Load your CSV data and let it fill, attach proof files, and submit logs automatically!
+    </div>
+    
+    <div class="instruction-card">
+      <div style="font-weight:700;margin-bottom:6px;color:#ffffff">Quick Guide:</div>
+      <ol>
+        <li>Navigate to the IPB Portal page using the button below.</li>
+        <li>Look for the floating 📄 icon in the bottom-right corner.</li>
+        <li>Click it to open the control panel, configure Dosen/Row, upload your `data.csv` and files.</li>
+        <li>Click <strong>Start Filling</strong>!</li>
+      </ol>
+    </div>
+    
+    <a href="https://studentportal.ipb.ac.id/Kegiatan/AktivitasKampusMerdeka" target="_blank" class="btn" id="open-portal-btn">
+      <span>Open IPB Student Portal</span>
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <line x1="10" y1="14" x2="21" y2="3"></line>
+      </svg>
+    </a>
+  </div>
+</body>
+</html>

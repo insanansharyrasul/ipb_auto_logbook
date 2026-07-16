@@ -1,4 +1,4 @@
-"""About tab — version, maintainers, license."""
+"""About tab: version, maintainers, license."""
 
 from __future__ import annotations
 

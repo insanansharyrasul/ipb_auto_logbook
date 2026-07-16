@@ -1,4 +1,4 @@
-"""Reusable widgets — info-label with a native hover tooltip."""
+"""Reusable widgets: info-label with a native hover tooltip."""
 
 from __future__ import annotations
 

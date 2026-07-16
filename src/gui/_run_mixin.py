@@ -1,4 +1,4 @@
-"""Run tab — start/stop button, progress bar, log output, runner thread."""
+"""Run tab: start/stop button, progress bar, log output, runner thread."""
 
 from __future__ import annotations
 

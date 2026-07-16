@@ -1,4 +1,4 @@
-"""IPB Auto Logbook — CLI entry point.
+"""IPB Auto Logbook: CLI entry point.
 
 Thin terminal front-end over the shared automation core in src/automator.py.
 Run with:  python main.py

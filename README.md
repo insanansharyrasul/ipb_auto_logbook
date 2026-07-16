@@ -1,143 +1,229 @@
-<h1> IPB Auto Logbook </h1>
+# IPB Auto Logbook
 
-Automated logbook filler for [IPB University Student Portal](https://studentportal.ipb.ac.id/), powered by _[Playwright](https://playwright.dev/python/)_. Now ships with a desktop GUI (PyQt6).
+[![Python 3.13](https://img.shields.io/badge/Python-3.13-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Playwright](https://img.shields.io/badge/Playwright-1.57-green?logo=playwright&logoColor=white)](https://playwright.dev/python/)
+[![PyQt6](https://img.shields.io/badge/PyQt6-6.11-orange?logo=qt&logoColor=white)](https://www.qt.io/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![GPL v3 License](https://img.shields.io/badge/License-GPL_v3-blue.svg)](LICENSE)
 
-# Table of Contents
+*Alat pengisi logbook otomatis untuk Portal Mahasiswa IPB University.* Ditenagai oleh *Playwright* untuk otomasi browser dan dilengkapi dengan antarmuka desktop (*PyQt6*) serta ekstensi Chrome (*Manifest V3*).
 
-- [Table of Contents](#table-of-contents)
-- [Requested Feature](#requested-feature)
-- [Setup](#setup)
-- [Running the App](#running-the-app)
-  - [GUI (recommended)](#gui-recommended)
-  - [CLI](#cli)
-- [Configuration Reference](#configuration-reference)
-- [CSV Format](#csv-format)
-- [Project Structure](#project-structure)
-- [Maintainers](#maintainers)
-- [Contributing](#contributing)
-- [License](#license)
+**Otomasi pengisian harian tanpa repot.** Proyek ini dirancang untuk mahasiswa IPB yang ingin mengisi logbook kegiatan (seperti MBKM, magang, dll.) secara massal menggunakan berkas CSV. Anda dapat menjalankannya sebagai aplikasi desktop GUI yang interaktif, skrip terminal CLI yang cepat, atau *Chrome Extension* (*browser extension*) yang berjalan langsung di *browser* aktif Anda tanpa perlu menyentuh kode Python.
 
-# Requested Feature
+*Menghemat waktu Anda.* Alih-alih menyalin entri kegiatan satu per satu setiap hari, cukup persiapkan berkas data Anda, jalankan program, dan biarkan sistem menyelesaikan pengisian beserta *upload* lampiran berkas bukti dalam hitungan menit.
 
-There are people that are requesting for:
-1. A comprehensive visual walkthrough covering environment setup, installation, and core application usage.
-2. A tool/script to automatically generate synthetic data.csv datasets, pre-populated with realistic metrics like requested hours, contextual logs, and system metadata.
-    
-# Setup
+---
 
-### 1. Install dependencies
+## Table of Contents (TOC)
+- [Fitur Utama](#fitur-utama)
+- [Setup Lingkungan](#setup-lingkungan)
+- [Panduan Memulai Cepat (Quick Start)](#panduan-memulai-cepat-quick-start)
+  - [Opsi 1: Desktop GUI](#opsi-1-desktop-gui)
+  - [Opsi 2: Chrome Extension (Browser Companion - Sangat Direkomendasikan)](#opsi-2-chrome-extension-browser-companion---sangat-direkomasikan)
+  - [Opsi 3: Command Line Interface (CLI)](#opsi-3-command-line-interface-cli)
+- [Panduan Konfigurasi](#panduan-konfigurasi)
+- [Format CSV](#format-csv)
+- [Struktur Proyek](#struktur-proyek)
+- [Pemelihara & Kontributor](#pemelihara--kontributor)
+- [Lisensi](#lisensi)
 
-```bash
-pip install -r requirements.txt
-playwright install
-```
+---
 
-### 2. Prepare CSV file
+## Fitur Utama
 
-Convert your `.xlsx` or Google Spreadsheet to CSV (separator `,` not `;`). See [CSV Format](#csv-format) below for column requirements.
+- **Otomasi Akurat.** Mengisi tanggal, waktu mulai, waktu selesai, jenis berita acara, dosen penggerak, lokasi, topik kegiatan, hingga melakukan *upload* berkas bukti secara presisi.
+- **Tiga Metode Eksekusi.** Pilih metode yang paling nyaman bagi Anda: aplikasi desktop visual (GUI), antarmuka baris perintah (CLI), atau ekstensi Chrome (*Manifest V3*).
+- **Isolasi UI & Aman.** Ekstensi Chrome menggunakan *Shadow DOM* sehingga tampilan panel otomasi tidak merusak visual portal mahasiswa IPB, dan seluruh kredensial Anda tersimpan aman secara lokal di *browser* Anda.
+- **Dukungan Pengurai Tangguh.** Menggunakan *library* *PapaParse* pada ekstensi untuk *parsing* CSV yang toleran terhadap spasi, baris kosong, maupun karakter khusus.
+- **Penyimpanan Berkas Lintas Muatan.** Menggunakan *IndexedDB* pada ekstensi untuk menyimpan berkas bukti dalam memori *browser* secara aman melewati *redirect* halaman.
+- **Opsi Headless & Slow Mo.** Sesuaikan kecepatan eksekusi otomasi dan pilih untuk menampilkan atau menyembunyikan jendela *browser* saat menggunakan versi Python.
 
-### 3. Clone the repository
+---
 
+## Setup Lingkungan
+
+### Prasyarat
+Untuk menjalankan aplikasi versi Python (GUI / CLI), pastikan Anda telah memasang:
+*   **Python 3.13+**
+*   *(Opsional)* Manajer paket **`uv`** untuk instalasi dan eksekusi yang lebih cepat.
+
+### Langkah 1: Clone Repositori
+*Clone* proyek ini ke komputer lokal Anda:
 ```bash
 git clone https://github.com/insanansharyrasul/ipb_auto_logbook.git
 cd ipb_auto_logbook
 ```
 
-> [!WARNING]
-> Never share your Python scripts directly with others as they may contain your username and password. Use the GUI's config fields instead credentials are never saved to disk and never sent over the network outside the student portal pages.
+### Langkah 2: Instalasi Dependensi
+Pilih salah satu metode instalasi di bawah ini (metode standar Python atau menggunakan `uv`):
 
-# Running the App
+#### Metode A: Standar Python (venv + pip)
+Buat virtual environment dan pasang dependensi menggunakan modul bawaan Python:
+```bash
+# Membuat virtual environment
+python3 -m venv .venv
 
-## GUI (recommended)
+# Mengaktifkan virtual environment
+# Di macOS / Linux:
+source .venv/bin/activate
+# Di Windows (Command Prompt):
+.venv\Scripts\activate.bat
+# Di Windows (PowerShell):
+.venv\Scripts\Activate.ps1
 
+# Memasang dependensi & browser driver Playwright
+pip install -r requirements.txt
+playwright install chromium
+```
+
+#### Metode B: Menggunakan manajer paket `uv` (Alternatif Cepat)
+Jika Anda memiliki `uv` terpasang, cukup jalankan perintah berikut:
+```bash
+uv venv
+uv pip install -r requirements.txt
+uv run playwright install chromium
+```
+
+---
+
+## Panduan Memulai Cepat (Quick Start)
+
+### Opsi 1: Desktop GUI
+
+Jalankan aplikasi desktop interaktif dengan perintah:
+
+#### Menggunakan Python Standar (Pastikan Virtual Environment Aktif):
 ```bash
 python gui_app.py
 ```
 
-A desktop window opens with 4 tabs:
+#### Alternatif Menggunakan `uv`:
+```bash
+uv run python gui_app.py
+```
 
-| Tab               | Purpose                                                                                                              |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **Configuration** | Enter Portal username/password, Dosen, Row Number, Semester, CSV path. Hover the ⓘ icons for guidance on each field. |
-| **Logbook Data**  | Edit your logbook entries in a table. Load CSV, add/delete rows, browse for files.                                   |
-| **Run**           | Start/stop automation with live progress bar and log output.                                                         |
-| **About**         | Version info, maintainers, and license.                                                                              |
+Jendela aplikasi desktop akan terbuka dengan 4 tab utama:
 
-Fill in the Configuration tab, load your CSV in Logbook Data, then switch to Run and start.
+| Tab              | Kegunaan                                                                                                |
+| :--------------- | :------------------------------------------------------------------------------------------------------ |
+| **Konfigurasi**  | Memasukkan *username*/*password* portal, nama Dosen, Nomor Baris kegiatan, Semester, dan berkas CSV.    |
+| **Data Logbook** | Melihat dan menyunting langsung data logbook Anda dalam bentuk tabel secara visual.                     |
+| **Jalankan**     | Memulai atau menghentikan proses otomasi dengan indikator progres dan log aktivitas *real-time*.        |
+| **Tentang**      | Informasi versi, pemelihara proyek, dan lisensi.                                                        |
 
-## CLI
+---
 
+### Opsi 2: Chrome Extension (Browser Companion - Sangat Direkomendasikan)
+
+Jika Anda tidak ingin menginstal Python atau Playwright di komputer Anda, Anda bisa menggunakan ekstensi Chrome yang berjalan langsung di *browser* aktif Anda:
+
+1.  Buka Google Chrome dan navigasikan ke `chrome://extensions/`.
+2.  Aktifkan **Mode Pengembang** (*Developer mode*) di pojok kanan atas.
+3.  Klik **Load unpacked** di pojok kiri atas.
+4.  Pilih direktori folder `extension/` di dalam repositori ini (`ipb_auto_logbook/extension`).
+5.  Buka halaman Portal Mahasiswa IPB pada bagian **Aktivitas Kampus Merdeka**: `https://studentportal.ipb.ac.id/Kegiatan/AktivitasKampusMerdeka`.
+6.  Klik ikon dokumen berwarna biru di pojok kanan bawah halaman untuk membuka panel kontrol.
+7.  Masukkan nama Dosen, nomor baris, semester, kredensial login (opsional untuk *auto-login*), *upload* berkas CSV, dan pilih berkas bukti fisik Anda.
+8.  Tekan **Mulai Pengisian**. Ekstensi akan otomatis *login*, membuka form, mengisi kolom, melakukan *upload* bukti, mengirim formulir, dan mengulangi proses tersebut untuk baris berikutnya.
+
+---
+
+### Opsi 3: Command Line Interface (CLI)
+
+Jalankan skrip berbasis terminal interaktif dengan perintah:
+
+#### Menggunakan Python Standar (Pastikan Virtual Environment Aktif):
 ```bash
 python main.py
 ```
 
-The CLI prompts for everything at runtime — no source editing:
-
-| Prompt       | Description                                                       |
-| ------------ | ----------------------------------------------------------------- |
-| Username     | Portal username                                                   |
-| Password     | Portal password (hidden input)                                    |
-| Dosen        | Dosen Penggerak name exactly as shown in the portal               |
-| Row Number   | The **No** column value of your activity row (not a manual count) |
-| Semester     | Academic year & semester, e.g. `2026/2027 Semester Genap`         |
-| CSV file     | Path to your `.csv` (default: `data.csv`)                         |
-
-Both the CLI and GUI share the same automation core in `src/automator.py`.
-
-# Configuration Reference
-
-| Field          | Where to find it                                                                                                                                                                              |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Dosen**      | Student Portal → Kemahasiswaan → Aktivitas → Log (list icon) → Tambah. Copy the name exactly from the "Dosen Penggerak" checkbox, e.g. `"Jeffrey Einstein, S.Komp., Ph.D."`. NRP is optional. |
-| **Row Number** | Kemahasiswaan → Aktivitas page. The number in the leftmost `No` column of your target activity row. Use the displayed number, not a manual row count.                                         |
-| **Semester**   | Same page, the `Tahun Semester` column. Must match exactly, e.g. `"2026/2027 Semester Genap"`.                                                                                                |
-
-> `ROW_NUMBER` and `SEMESTER` are combined to locate the correct row on the Aktivitas table (`"<ROW_NUMBER> <SEMESTER>"`).
-
-# CSV Format
-
-8 columns, all values lowercase:
-
-| Column       | Description                        | Example                |
-| ------------ | ---------------------------------- | ---------------------- |
-| `tanggal`    | Date (DD/MM/YYYY)                  | `12/04/2026`           |
-| `mulai`      | Start time (HH:MM)                 | `08:00`                |
-| `selesai`    | End time (HH:MM)                   | `10:00`                |
-| `keterangan` | Description / topic                | `Observasi dan Survei` |
-| `file`       | Relative path under `files/`       | `files/bukti.png`      |
-| `tipe`       | `offline` / `online` / `hybrid`    | `offline`              |
-| `lokasi`     | Location                           | `Kos`                  |
-| `berita`     | `kegiatan` / `ujian` / `bimbingan` | `kegiatan`             |
-
-Accepted file formats for upload: `.png`, `.jpeg`, `.jpg`, `.pdf`. The app resolves relative paths to absolute paths automatically.
-
-See [data.csv](data.csv) for a complete example.
-
-# Project Structure
-
-```
-├── gui_app.py              # Desktop GUI entry point
-├── main.py                 # CLI entry point
-├── src/
-│   ├── automator.py        # Playwright automation core
-│   └── gui/                # GUI components (modular mixins)
-│       ├── _constants.py   # Shared constants & info texts
-│       ├── _widgets.py     # Reusable widgets (info tooltips)
-│       ├── _config_mixin.py
-│       ├── _data_mixin.py
-│       ├── _run_mixin.py
-│       └── _about_mixin.py
-├── files/                  # Upload files directory
-├── data.csv                # Example CSV input
-└── requirements.txt
+#### Alternatif Menggunakan `uv`:
+```bash
+uv run python main.py
 ```
 
-# Contributing
+Sistem akan menanyakan parameter konfigurasi langsung dari terminal secara runtut:
+*   *Username* & *Password* Portal (masukan kata sandi disembunyikan untuk keamanan).
+*   Nama Dosen Penggerak (harus sama persis dengan yang tertera di portal).
+*   Nomor Baris (*Row Number*) kegiatan MBKM Anda.
+*   Semester akademik aktif.
+*   Path menuju berkas CSV data logbook Anda.
 
-The browser engine can be switched from `chromium` to `firefox` in `src/automator.py`. See the [Playwright documentation](https://playwright.dev/python/docs/intro) for details.
+---
 
-GUI components are organized as mixins in `src/gui/` with each tab is self-contained. To add a new tab, create a new mixin and inherit it in `LogbookApp`.
+## Panduan Konfigurasi
 
-# License
+Berikut acuan untuk mengisi kolom konfigurasi agar otomasi dapat menemukan baris kegiatan yang tepat di portal:
 
-[GNU General Public License v3.0](LICENSE)
+| Bidang Konfigurasi             | Lokasi Pengambilan Data di Portal Mahasiswa                                                                                          | Contoh Masukan                       |
+| :----------------------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------- |
+| **Dosen**                      | Masuk ke detail Aktivitas $\rightarrow$ Log $\rightarrow$ Tambah. Salin nama lengkap Dosen Penggerak secara presisi dari daftar pilihan yang tersedia. | `"Jeffrey Einstein, S.Komp., Ph.D."` |
+| **Nomor Baris (*Row Number*)** | Tertera pada tabel utama halaman Aktivitas. Ambil nilai angka pada kolom paling kiri (`No`), bukan urutan baris manual Anda.          | `"1"`                                |
+| **Semester**                   | Tertera pada kolom `Tahun Semester` di tabel utama halaman Aktivitas. Harus ditulis sama persis.                                     | `"2026/2027 Semester Genap"`         |
+
+> [!IMPORTANT]
+> Sistem otomasi akan menggabungkan nilai `Nomor Baris` dan `Semester` (format: `"<Nomor Baris> <Semester>"`) untuk mencari dan mengklik baris aktivitas yang tepat pada tabel portal mahasiswa.
+
+---
+
+## Format CSV
+
+Berkas data logbook harus memiliki **8 kolom** dengan penulisan huruf kecil (*lowercase*) pada tajuk (*header*) kolomnya:
+
+| Kolom        | Deskripsi                                               | Contoh Nilai                              |
+| :----------- | :------------------------------------------------------ | :---------------------------------------- |
+| `tanggal`    | Tanggal kegiatan (format DD/MM/YYYY)                    | `16/07/2026`                              |
+| `mulai`      | Waktu mulai kegiatan (format HH:MM)                     | `08:00`                                   |
+| `selesai`    | Waktu selesai kegiatan (format HH:MM)                   | `10:00`                                   |
+| `keterangan` | Deskripsi / ringkasan kegiatan harian                   | `Observasi dan Survei Kebutuhan Pengguna` |
+| `file`       | Path relatif berkas bukti di dalam folder `files/`      | `files/bukti.png`                         |
+| `tipe` | Pilihan tipe kegiatan (*offline* / *online* / *hybrid*) | `offline` |
+| `lokasi`     | Lokasi spesifik tempat kegiatan dilakukan               | `Kos` / `Kantor Magang`                   |
+| `berita`     | Jenis berita acara (*kegiatan* / *ujian* / *bimbingan*) | `kegiatan`                                |
+
+*Format file bukti yang didukung oleh portal IPB: `.png`, `.jpeg`, `.jpg`, `.pdf`.*
+*Download template CSV siap pakai langsung dari panel kontrol ekstensi Chrome.*
+
+---
+
+## Struktur Proyek
+
+```
+ipb_auto_logbook/
+├── pyproject.toml          # Konfigurasi dependensi proyek modern (PEP 621)
+├── uv.lock                 # Berkas penguncian dependensi yang dihasilkan oleh uv
+├── pyrightconfig.json      # Konfigurasi import paths Pylance/Pyright untuk VS Code
+├── gui_app.py              # Titik masuk (entry point) aplikasi desktop GUI
+├── main.py                 # Titik masuk (entry point) aplikasi terminal CLI
+├── extension/              # Sumber kode untuk Chrome Extension
+│   ├── manifest.json       # Konfigurasi Manifest V3 Chrome Extension
+│   ├── content.js          # Skrip otomasi halaman & UI melayang dalam Shadow DOM
+│   ├── papaparse.min.js    # Pustaka pihak ketiga untuk mengurai berkas CSV secara lokal
+│   └── icons/              # Ikon ekstensi menggunakan Logo IPB University
+├── src/                    # Kode inti logika Python
+│   ├── automator.py        # Core mesin otomasi berbasis Playwright
+│   └── gui/                # Struktur modular visual PyQt6
+│       ├── _constants.py   # Konstanta bersama dan panduan informasi teks
+│       ├── _widgets.py     # Widget visual yang dapat digunakan kembali (seperti tooltip)
+│       └── ...             # Mixin kode modular PyQt6 per tab halaman
+├── files/                  # Tempat berkas lampiran bukti kegiatan diletakkan
+└── data.csv                # Contoh berkas input logbook awal Anda
+```
+
+---
+
+## Pemelihara & Kontributor
+
+### Penggagas Project Utama
+*   **Insan Anshary Rasul** - [@insanansharyrasul](https://github.com/insanansharyrasul)
+
+### Contributor
+*   **Aghnat Hasya Sayyidina** - [@AghnatHs](https://github.com/AghnatHs)
+*   **Rafif Farras** - [@Raphcel](https://github.com/Raphcel)
+*   **Raihan Putra Kirana** - [@raihanpka](https://github.com/raihanpka)
+
+---
+
+## Lisensi
+
+Didistribusikan di bawah **[Lisensi GNU General Public License v3.0](LICENSE)**.

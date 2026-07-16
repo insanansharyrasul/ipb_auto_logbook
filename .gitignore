@@ -8,6 +8,7 @@ env/
 .idea/
 .DS_Store
 .omo
+uv.lock
 
 # Ignore everything inside files/ But explicitly allow example file
 files/*

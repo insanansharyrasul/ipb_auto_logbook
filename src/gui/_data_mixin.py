@@ -1,4 +1,4 @@
-"""Logbook Data tab — editable CSV table with toolbar."""
+"""Logbook Data tab: editable CSV table with toolbar."""
 
 from __future__ import annotations
 
