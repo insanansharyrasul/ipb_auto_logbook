@@ -1,4 +1,4 @@
-name: Build Windows exe
+name: Build Multiplatform Executables
 
 on:
   push:
@@ -10,7 +10,22 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    name: Build on ${{ matrix.platform }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            artifact_name: IPB-Auto-Logbook-Windows.zip
+            platform: Windows
+          - os: ubuntu-latest
+            artifact_name: IPB-Auto-Logbook-Linux.tar.gz
+            platform: Linux
+          - os: macos-latest
+            artifact_name: IPB-Auto-Logbook-macOS.zip
+            platform: macOS
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,26 +38,38 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
 
-      - name: Build exe
+      - name: Build bundle
         run: pyinstaller ipb_auto_logbook.spec
 
-      - name: Stage user-editable data next to the exe
+      - name: Stage and package (Windows)
+        if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
           Copy-Item data.csv dist/IPB-Auto-Logbook/
           Copy-Item files   dist/IPB-Auto-Logbook/files -Recurse
+          Compress-Archive -Path dist/IPB-Auto-Logbook/* -DestinationPath ${{ matrix.artifact_name }}
 
-      - name: Zip the bundle
-        shell: pwsh
-        run: Compress-Archive -Path dist/IPB-Auto-Logbook/* -DestinationPath IPB-Auto-Logbook-Windows.zip
+      - name: Stage and package (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          cp data.csv dist/IPB-Auto-Logbook/
+          cp -r files dist/IPB-Auto-Logbook/files
+          cd dist/IPB-Auto-Logbook && zip -r ../../${{ matrix.artifact_name }} *
+
+      - name: Stage and package (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cp data.csv dist/IPB-Auto-Logbook/
+          cp -r files dist/IPB-Auto-Logbook/files
+          cd dist/IPB-Auto-Logbook && tar -czf ../../${{ matrix.artifact_name }} *
 
       - uses: actions/upload-artifact@v4
         with:
-          name: IPB-Auto-Logbook-Windows
-          path: IPB-Auto-Logbook-Windows.zip
+          name: IPB-Auto-Logbook-${{ matrix.platform }}
+          path: ${{ matrix.artifact_name }}
 
       - name: Attach to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: IPB-Auto-Logbook-Windows.zip
+          files: ${{ matrix.artifact_name }}

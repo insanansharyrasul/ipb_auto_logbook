@@ -4,6 +4,7 @@
 [![Playwright](https://img.shields.io/badge/Playwright-1.57-green?logo=playwright&logoColor=white)](https://playwright.dev/python/)
 [![PyQt6](https://img.shields.io/badge/PyQt6-6.11-orange?logo=qt&logoColor=white)](https://www.qt.io/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Build Multiplatform Executables](https://github.com/insanansharyrasul/ipb_auto_logbook/actions/workflows/build-windows.yml/badge.svg)](https://github.com/insanansharyrasul/ipb_auto_logbook/actions)
 [![GPL v3 License](https://img.shields.io/badge/License-GPL_v3-blue.svg)](LICENSE)
 
 *Alat pengisi logbook otomatis untuk Portal Mahasiswa IPB University.* Ditenagai oleh *Playwright* untuk otomasi browser dan dilengkapi dengan antarmuka desktop (*PyQt6*) serta ekstensi Chrome (*Manifest V3*).
@@ -19,7 +20,7 @@
 - [Setup Lingkungan](#setup-lingkungan)
 - [Panduan Memulai Cepat (Quick Start)](#panduan-memulai-cepat-quick-start)
   - [Opsi 1: Desktop GUI](#opsi-1-desktop-gui)
-  - [Opsi 2: Chrome Extension (Browser Companion - Sangat Direkomendasikan)](#opsi-2-chrome-extension-browser-companion---sangat-direkomasikan)
+  - [Opsi 2: Chrome Extension (Browser Companion - Sangat Direkomendasikan)](#opsi-2-chrome-extension-browser-companion---sangat-direkomendasikan)
   - [Opsi 3: Command Line Interface (CLI)](#opsi-3-command-line-interface-cli)
 - [Panduan Konfigurasi](#panduan-konfigurasi)
 - [Format CSV](#format-csv)

@@ -1,7 +1,7 @@
 [project]
 name = "ipb-auto-logbook"
 version = "0.1.0"
-description = "Add your description here"
+description = "Automated logbook filler for the IPB University student portal."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
