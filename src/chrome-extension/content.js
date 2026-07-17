@@ -515,20 +515,7 @@ function injectUI() {
         <div class="status-banner-text" id="status-text">Siap melakukan otomasi. Unggah berkas CSV & berkas bukti untuk memulai.</div>
       </div>
       
-      <!-- Account Credentials (matches GUI setup) -->
-      <div class="form-group">
-        <div class="section-title">Kredensial Akun</div>
-        <div class="btn-row">
-          <div class="form-group" style="flex:1">
-            <label for="username-input">Nama Pengguna</label>
-            <input type="text" id="username-input" placeholder="NRP / ID Pengguna" />
-          </div>
-          <div class="form-group" style="flex:1">
-            <label for="password-input">Kata Sandi</label>
-            <input type="password" id="password-input" placeholder="••••••••" />
-          </div>
-        </div>
-      </div>
+
       
       <div class="form-group">
         <div class="section-title">Parameter Logbook</div>
