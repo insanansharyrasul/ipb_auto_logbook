@@ -1,1 +1,4 @@
-contoh file pendukung
+Direktori ini ("files/") menyimpan semua dokumen/berkas bukti kegiatan (foto, tangkapan layar, PDF) untuk entri logbook Anda.
+- Nama berkas di sini harus SAMA PERSIS dengan path berkas yang terdaftar di kolom "file" pada berkas CSV Anda (contoh: "files/bukti_04_02_2026.png").
+- Jenis berkas yang didukung oleh Portal Mahasiswa IPB: .png, .jpg, .jpeg, .pdf
+- Contoh: "files/Laporan-Akhir-Capstone.pdf" adalah berkas PDF nyata yang telah dipetakan ke baris laporan akhir (01/07/2026) pada berkas CSV Anda.

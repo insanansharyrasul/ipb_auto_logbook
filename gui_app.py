@@ -1,5 +1,5 @@
-"""IPB Auto Logbook — Desktop GUI (PyQt6).
-
+"""
+IPB Auto Logbook Desktop GUI (PyQt6).
 Launch with:  python gui_app.py
 """
 
@@ -35,7 +35,7 @@ class LogbookApp(
     AboutTabMixin,
     QMainWindow,
 ):
-    """Root application window — composes tabs via mixins."""
+    """Root application window, composes tabs via mixins."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -44,11 +44,11 @@ class LogbookApp(
         self.resize(900, 700)
         self.setMinimumSize(800, 600)
 
-        # -- state -----------------------------------------------------------
+        # State
         self._worker: Optional[_RunWorker] = None
         self._table_rows: list[dict] = []
 
-        # -- build UI --------------------------------------------------------
+        # Build UI
         self._tabview = QTabWidget()
         self.setCentralWidget(self._tabview)
 

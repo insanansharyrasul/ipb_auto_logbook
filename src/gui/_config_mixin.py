@@ -1,4 +1,4 @@
-"""Configuration tab — account, logbook params, CSV source, options."""
+"""Configuration tab: account, logbook params, CSV source, options."""
 
 from __future__ import annotations
 
@@ -152,7 +152,7 @@ class ConfigTabMixin:
 
     def _apply_config(self, cfg: LogbookConfig) -> None:
         self._ent_username.setText(cfg.username)
-        self._ent_password.setText(cfg.password)  # blank — not saved to disk
+        self._ent_password.setText(cfg.password)  # blank: not saved to disk
         self._ent_dosen.setText(cfg.dosen)
         self._ent_row.setText(cfg.row_number)
         self._ent_semester.setText(cfg.semester)

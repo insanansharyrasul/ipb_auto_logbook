@@ -1,6 +1,6 @@
-# PyInstaller spec — builds the Windows GUI as a onedir bundle.
+# PyInstaller spec: builds the Windows GUI as a onedir bundle.
 #
-#   pyinstaller ipb_auto_logbook.spec
+# Run: pyinstaller ipb_auto_logbook.spec
 #
 # No Chromium is bundled: the app drives the user's system Edge/Chrome
 # (see Automator._launch_browser). Only Playwright's own driver is collected.

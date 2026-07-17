@@ -1,6 +1,6 @@
-"""GUI components for IPB Auto Logbook — tab mixins and reusable widgets."""
+"""GUI components for IPB Auto Logbook: tab mixins and reusable widgets."""
 
-from src.gui._constants import (  # noqa: F401 — re-exports
+from src.gui._constants import (  # noqa: F401: re-exports
     APP_MAINTAINERS,
     APP_VERSION,
     BERITA_VALUES,

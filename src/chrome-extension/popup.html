@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>IPB Auto Logbook - Extension Companion</title>
+  <style>
+    body {
+      width: 330px;
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #ffffff;
+      color: #334155;
+      box-sizing: border-box;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .logo-container {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background: #003882;
+      box-shadow: 0 4px 12px rgba(0, 56, 130, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    
+    .logo-container svg {
+      width: 32px;
+      height: 32px;
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    h2 {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #003882;
+    }
+    
+    .subtitle {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      margin: 0 0 20px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #475569;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    .instruction-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #334155;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 20px;
+    }
+    
+    .instruction-card ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .instruction-card li {
+      margin-bottom: 8px;
+    }
+    
+    .instruction-card li:last-child {
+      margin-bottom: 0;
+    }
+    
+    .btn {
+      width: 100%;
+      background: #003882;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease-in-out;
+      text-decoration: none;
+      box-sizing: border-box;
+    }
+    
+    .btn:hover {
+      background: #002659;
+    }
+    
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: #ffffff;
+      stroke-width: 2;
+      fill: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      <svg viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+    </div>
+    
+    <h2>IPB Auto Logbook</h2>
+    <div class="subtitle">Extension Companion</div>
+    
+    <div class="desc" id="desc-text">
+      Sebuah <i>helper</i> otomatisasi ringan langsung di dalam <i>browser</i> Anda. Muat data CSV Anda, dan biarkan sistem mengisi formulir, melakukan <b>upload</b> berkas bukti, dan mengirim (<b>submit</b>) <i>logbook</i> secara otomatis!
+    </div>
+    
+    <div class="instruction-card">
+      <div style="font-weight:700;margin-bottom:6px;color:#003882">Panduan Ringkas:</div>
+      <ol>
+        <li>Buka halaman Portal Mahasiswa IPB menggunakan tombol di bawah ini.</li>
+        <li>Cari ikon dokumen melayang 📄 di <b>pojok kanan atas</b> halaman. (Muat ulang/refresh halaman jika ikon belum muncul).</li>
+        <li>Klik ikon tersebut untuk membuka panel kontrol, atur nama Dosen dan nomor baris, lalu <b>upload</b> berkas logbook (CSV) beserta berkas bukti Anda.</li>
+        <li>Klik tombol <strong>Mulai Pengisian</strong>!</li>
+      </ol>
+    </div>
+    
+    <a href="https://studentportal.ipb.ac.id/Kegiatan/AktivitasKampusMerdeka" target="_blank" class="btn" id="open-portal-btn">
+      <span>Buka Portal Mahasiswa IPB</span>
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <line x1="10" y1="14" x2="21" y2="3"></line>
+      </svg>
+    </a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
