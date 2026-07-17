@@ -4,7 +4,7 @@
 [![Playwright](https://img.shields.io/badge/Playwright-1.57-green?logo=playwright&logoColor=white)](https://playwright.dev/python/)
 [![PyQt6](https://img.shields.io/badge/PyQt6-6.11-orange?logo=qt&logoColor=white)](https://www.qt.io/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Build Multiplatform Executables](https://github.com/insanansharyrasul/ipb_auto_logbook/actions/workflows/build-windows.yml/badge.svg)](https://github.com/insanansharyrasul/ipb_auto_logbook/actions)
+[![Build Multiplatform](https://github.com/insanansharyrasul/ipb_auto_logbook/actions/workflows/build.yml/badge.svg)](https://github.com/insanansharyrasul/ipb_auto_logbook/actions)
 [![GPL v3 License](https://img.shields.io/badge/License-GPL_v3-blue.svg)](LICENSE)
 
 *Alat pengisi logbook otomatis untuk Portal Mahasiswa IPB University.* Ditenagai oleh *Playwright* untuk otomasi browser dan dilengkapi dengan antarmuka desktop (*PyQt6*) serta ekstensi Chrome (*Manifest V3*).
@@ -171,16 +171,16 @@ Berikut acuan untuk mengisi kolom konfigurasi agar otomasi dapat menemukan baris
 
 Berkas data logbook harus memiliki **8 kolom** dengan penulisan huruf kecil (*lowercase*) pada tajuk (*header*) kolomnya:
 
-| Kolom        | Deskripsi                                               | Contoh Nilai                              |
-| :----------- | :------------------------------------------------------ | :---------------------------------------- |
-| `tanggal`    | Tanggal kegiatan (format DD/MM/YYYY)                    | `16/07/2026`                              |
-| `mulai`      | Waktu mulai kegiatan (format HH:MM)                     | `08:00`                                   |
-| `selesai`    | Waktu selesai kegiatan (format HH:MM)                   | `10:00`                                   |
-| `keterangan` | Deskripsi / ringkasan kegiatan harian                   | `Observasi dan Survei Kebutuhan Pengguna` |
-| `file`       | Path relatif berkas bukti di dalam folder `files/`      | `files/bukti.png`                         |
-| `tipe` | Pilihan tipe kegiatan (*offline* / *online* / *hybrid*) | `offline` |
-| `lokasi`     | Lokasi spesifik tempat kegiatan dilakukan               | `Kos` / `Kantor Magang`                   |
-| `berita`     | Jenis berita acara (*kegiatan* / *ujian* / *bimbingan*) | `kegiatan`                                |
+| Kolom        | Deskripsi                                               | Contoh Nilai (Harus Menggunakan Tanda Kutip Ganda) |
+| :----------- | :------------------------------------------------------ | :------------------------------------------------- |
+| `tanggal`    | Tanggal kegiatan (format DD/MM/YYYY)                    | `"04/02/2026"`                                     |
+| `mulai`      | Waktu mulai kegiatan (format HH:MM)                     | `"15:00"`                                          |
+| `selesai`    | Waktu selesai kegiatan (format HH:MM)                   | `"16:00"`                                          |
+| `keterangan` | Deskripsi / ringkasan kegiatan harian                   | `"Diskusi project dan pembagian jobdesk"`          |
+| `file`       | Path relatif berkas bukti di dalam folder `files/`      | `"files/bukti_04_02_2026.png"`                     |
+| `tipe`       | Pilihan tipe kegiatan (*offline* / *online* / *hybrid*) | `"offline"`                                        |
+| `lokasi`     | Lokasi spesifik tempat kegiatan dilakukan               | `"SC IPB"`                                         |
+| `berita`     | Jenis berita acara (*kegiatan* / *ujian* / *bimbingan*) | `"kegiatan"`                                       |
 
 *Format file bukti yang didukung oleh portal IPB: `.png`, `.jpeg`, `.jpg`, `.pdf`.*
 *Download template CSV siap pakai langsung dari panel kontrol ekstensi Chrome.*

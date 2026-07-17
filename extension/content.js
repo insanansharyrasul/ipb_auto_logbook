@@ -53,9 +53,9 @@ async function clearDB() {
 
 // Trigger CSV Template Download
 function downloadCSVTemplate() {
-  const headers = "tanggal,mulai,selesai,keterangan,file,tipe,lokasi,berita\n";
-  const sampleRow = "16/07/2026,08:00,10:00,Revisi Laporan Kerja Harian,files/bukti.png,offline,Kantor Magang,kegiatan\n";
-  
+  const headers = '"tanggal","mulai","selesai","keterangan","file","tipe","lokasi","berita"\n';
+  const sampleRow = '"04/02/2026","15:00","16:00","Diskusi project dan pembagian jobdesk","files/bukti_04_02_2026.png","offline","SC IPB","kegiatan"\n';
+
   const blob = new Blob([headers + sampleRow], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -72,11 +72,30 @@ function getPageType() {
   const url = window.location.href;
   if (url.includes('Account/Login')) {
     return 'login';
-  } else if (url.includes('AktivitasKampusMerdeka')) {
-    return 'aktivitas';
-  } else if (url.includes('LogBookAktivitas') && !url.includes('Create') && !url.includes('Edit')) {
+  }
+  
+  // Helper to check if date input is present in DOM using case-insensitive placeholder matching
+  const hasDateInput = () => {
+    return Array.from(document.querySelectorAll('input')).some(el => {
+      const ph = el.getAttribute('placeholder') || '';
+      return ph.toLowerCase().includes('tanggal');
+    });
+  };
+  
+  // Check Logbook pages first to avoid partial string matching conflict with AktivitasKampusMerdeka
+  if (url.includes('LogAktivitasKampusMerdeka') || url.includes('LogBookAktivitas')) {
+    if (url.includes('Create') || url.includes('Edit') || hasDateInput()) {
+      return 'form';
+    }
     return 'log_list';
-  } else if (url.includes('LogBookAktivitas/Create') || url.includes('LogBookAktivitas/Edit') || document.querySelector('input[placeholder="Tanggal"]')) {
+  }
+  
+  if (url.includes('AktivitasKampusMerdeka')) {
+    return 'aktivitas';
+  }
+  
+  // Safe fallback if we see the Tanggal input
+  if (hasDateInput()) {
     return 'form';
   }
   return 'other';
@@ -91,15 +110,13 @@ function injectUI() {
   const container = document.createElement('div');
   container.id = 'ipb-logbook-extension-root';
   document.body.appendChild(container);
-  
+
   shadowRoot = container.attachShadow({ mode: 'open' });
-  
+
   const style = document.createElement('style');
   style.textContent = `
-    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap');
-    
     :host {
-      font-family: 'Open Sans', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size: 14px;
       color: #334155;
     }
@@ -107,25 +124,25 @@ function injectUI() {
     /* FAB (Floating Action Button) - IPB Blue Theme */
     .fab {
       position: fixed;
-      bottom: 24px;
+      top: 24px;
       right: 24px;
       width: 56px;
       height: 56px;
-      border-radius: 28px;
-      background: linear-gradient(135deg, #0056b3 0%, #003882 100%);
-      box-shadow: 0 8px 30px rgba(0, 56, 130, 0.35);
+      border-radius: 50%;
+      background: #003882;
+      box-shadow: 0 4px 12px rgba(0, 56, 130, 0.25);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       z-index: 99999;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease-in-out;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .fab:hover {
-      transform: scale(1.1) rotate(5deg);
-      box-shadow: 0 12px 35px rgba(0, 56, 130, 0.5);
+      background: #002659;
+      transform: scale(1.05);
     }
     
     .fab svg {
@@ -138,34 +155,23 @@ function injectUI() {
       stroke-linejoin: round;
     }
     
-    .fab.active-glow::after {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      border: 2px solid #10b981;
-      animation: pulse 1.8s infinite;
-      box-shadow: 0 0 15px #10b981;
-    }
-    
-    /* Main Panel Card - Clean White Theme */
+    /* Main Panel Card - Minimalist White Theme */
     .panel {
       position: fixed;
-      bottom: 96px;
+      top: 96px;
       right: 24px;
       width: 390px;
       max-height: 585px;
       background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       z-index: 99999;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      transform-origin: bottom right;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: top right;
       transform: scale(0);
       opacity: 0;
       pointer-events: none;
@@ -179,9 +185,9 @@ function injectUI() {
     
     /* Header - IPB Colors */
     .header {
-      padding: 16px 20px;
+      padding: 14px 20px;
       background: #f8fafc;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid #cbd5e1;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -189,8 +195,8 @@ function injectUI() {
     
     .title {
       font-weight: 700;
-      font-size: 16px;
-      color: #004c97;
+      font-size: 15px;
+      color: #003882;
       margin: 0;
     }
     
@@ -227,7 +233,7 @@ function injectUI() {
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #004c97;
+      color: #003882;
       font-weight: 700;
       margin-bottom: 4px;
       border-bottom: 1px solid #f1f5f9;
@@ -249,7 +255,7 @@ function injectUI() {
     input[type="text"], input[type="password"], input[type="file"] {
       background: #ffffff;
       border: 1px solid #cbd5e1;
-      border-radius: 8px;
+      border-radius: 6px;
       padding: 8px 12px;
       color: #0f172a;
       font-family: inherit;
@@ -259,9 +265,9 @@ function injectUI() {
     
     input[type="text"]:focus, input[type="password"]:focus {
       outline: none;
-      border-color: #004c97;
+      border-color: #003882;
       background: #ffffff;
-      box-shadow: 0 0 0 2px rgba(0, 76, 151, 0.15);
+      box-shadow: 0 0 0 2px rgba(0, 56, 130, 0.15);
     }
     
     /* Custom File Input styling */
@@ -275,7 +281,7 @@ function injectUI() {
     .file-btn {
       background: #f8fafc;
       border: 1px dashed #cbd5e1;
-      border-radius: 8px;
+      border-radius: 6px;
       padding: 10px;
       text-align: center;
       cursor: pointer;
@@ -286,9 +292,9 @@ function injectUI() {
     }
     
     .file-btn:hover {
-      background: rgba(0, 76, 151, 0.04);
-      border-color: #004c97;
-      color: #004c97;
+      background: rgba(0, 56, 130, 0.04);
+      border-color: #003882;
+      color: #003882;
     }
     
     /* Control Buttons */
@@ -301,7 +307,7 @@ function injectUI() {
     .btn {
       flex: 1;
       padding: 9px 14px;
-      border-radius: 8px;
+      border-radius: 6px;
       font-weight: 600;
       font-size: 13px;
       cursor: pointer;
@@ -315,30 +321,28 @@ function injectUI() {
     }
     
     .btn-primary {
-      background: linear-gradient(135deg, #0056b3 0%, #003882 100%);
+      background: #003882;
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 56, 130, 0.2);
     }
     
     .btn-primary:hover {
-      background: linear-gradient(135deg, #003d80 0%, #00224d 100%);
-      transform: translateY(-1px);
+      background: #002659;
     }
     
     .btn-danger {
-      background: rgba(239, 68, 68, 0.1);
+      background: rgba(239, 68, 68, 0.08);
       color: #ef4444;
       border: 1px solid rgba(239, 68, 68, 0.2);
     }
     
     .btn-danger:hover {
-      background: rgba(239, 68, 68, 0.2);
+      background: rgba(239, 68, 68, 0.15);
     }
     
     .btn-secondary {
       background: #f1f5f9;
       color: #334155;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #cbd5e1;
     }
     
     .btn-secondary:hover {
@@ -346,13 +350,13 @@ function injectUI() {
     }
     
     .btn-link {
-      background: rgba(232, 155, 0, 0.08);
+      background: #fdf6e2;
       color: #b37700;
-      border: 1px solid rgba(232, 155, 0, 0.2);
+      border: 1px solid #f5e4b2;
     }
     
     .btn-link:hover {
-      background: rgba(232, 155, 0, 0.16);
+      background: #fbeed0;
     }
     
     .btn:disabled {
@@ -479,7 +483,7 @@ function injectUI() {
       background: rgba(0, 0, 0, 0.2);
     }
   `;
-  
+
   const fab = document.createElement('div');
   fab.className = 'fab';
   fab.innerHTML = `
@@ -491,7 +495,7 @@ function injectUI() {
       <polyline points="10 9 9 9 8 9"></polyline>
     </svg>
   `;
-  
+
   const panel = document.createElement('div');
   panel.className = 'panel';
   panel.innerHTML = `
@@ -551,7 +555,7 @@ function injectUI() {
         </div>
         
         <div class="file-input-wrapper">
-          <div class="file-btn" id="csv-btn">📁 Unggah data.csv</div>
+          <div class="file-btn" id="csv-btn">📁 Unggah Logbook (CSV)</div>
           <input type="file" id="csv-file" accept=".csv" style="display:none" />
         </div>
         
@@ -577,20 +581,20 @@ function injectUI() {
       IPB Auto Logbook Companion v1.0.0
     </div>
   `;
-  
+
   shadowRoot.appendChild(style);
   shadowRoot.appendChild(fab);
   shadowRoot.appendChild(panel);
-  
+
   // Wire up UI toggles
   fab.addEventListener('click', () => {
     panel.classList.toggle('show');
   });
-  
+
   shadowRoot.getElementById('close-panel-btn').addEventListener('click', () => {
     panel.classList.remove('show');
   });
-  
+
   // Bind input elements, buttons and file pickers
   const csvBtn = shadowRoot.getElementById('csv-btn');
   const csvFileInput = shadowRoot.getElementById('csv-file');
@@ -599,24 +603,16 @@ function injectUI() {
   const startBtn = shadowRoot.getElementById('start-btn');
   const resetBtn = shadowRoot.getElementById('reset-btn');
   const templateBtn = shadowRoot.getElementById('template-btn');
-  
-  const usernameInput = shadowRoot.getElementById('username-input');
-  const passwordInput = shadowRoot.getElementById('password-input');
+
   const dosenInput = shadowRoot.getElementById('dosen-input');
   const rowInput = shadowRoot.getElementById('row-input');
   const semesterInput = shadowRoot.getElementById('semester-input');
-  
+
   csvBtn.addEventListener('click', () => csvFileInput.click());
   proofBtn.addEventListener('click', () => proofFilesInput.click());
   templateBtn.addEventListener('click', downloadCSVTemplate);
-  
+
   // Storage sync on inputs
-  usernameInput.addEventListener('input', (e) => {
-    chrome.storage.local.set({ username: e.target.value });
-  });
-  passwordInput.addEventListener('input', (e) => {
-    chrome.storage.local.set({ password: e.target.value });
-  });
   dosenInput.addEventListener('input', (e) => {
     chrome.storage.local.set({ dosen: e.target.value });
     checkReadyState();
@@ -627,14 +623,14 @@ function injectUI() {
   semesterInput.addEventListener('input', (e) => {
     chrome.storage.local.set({ semester: e.target.value });
   });
-  
+
   // CSV file picker change event
   csvFileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
-    reader.onload = function(evt) {
+    reader.onload = function (evt) {
       try {
         const results = Papa.parse(evt.target.result, {
           header: true,
@@ -646,7 +642,7 @@ function injectUI() {
           alert('Berkas CSV kosong atau tidak valid.');
           return;
         }
-        chrome.storage.local.set({ 
+        chrome.storage.local.set({
           queue: parsed,
           currentIndex: 0,
           csvFileName: file.name
@@ -663,12 +659,12 @@ function injectUI() {
     };
     reader.readAsText(file);
   });
-  
+
   // Proof files picker change event
   proofFilesInput.addEventListener('change', async (e) => {
     const files = e.target.files;
     if (files.length === 0) return;
-    
+
     let successCount = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -679,13 +675,13 @@ function injectUI() {
         console.error(`Gagal menyimpan berkas ${file.name}:`, err);
       }
     }
-    
+
     shadowRoot.getElementById('file-count').textContent = `${successCount} berkas bukti tersimpan di memori peramban`;
     proofBtn.textContent = `🖼 Berhasil Memuat ${successCount} Berkas`;
     proofBtn.style.borderColor = '#10b981';
     proofBtn.style.color = '#10b981';
   });
-  
+
   // Start Button Event
   startBtn.addEventListener('click', () => {
     chrome.storage.local.get(['automatorActive'], (res) => {
@@ -705,19 +701,17 @@ function injectUI() {
       }
     });
   });
-  
+
   // Reset Button Event
   resetBtn.addEventListener('click', () => {
     if (confirm('Apakah Anda yakin ingin mengatur ulang semua konfigurasi dan berkas yang telah dimuat?')) {
       chrome.storage.local.clear(() => {
         clearDB().then(() => {
           // Reset UI elements
-          usernameInput.value = '';
-          passwordInput.value = '';
           dosenInput.value = '';
           rowInput.value = '';
           semesterInput.value = '';
-          csvBtn.textContent = '📁 Unggah data.csv';
+          csvBtn.textContent = '📁 Unggah Logbook (CSV)';
           csvBtn.style.borderColor = '';
           csvBtn.style.color = '';
           proofBtn.textContent = '🖼 Pilih Berkas Bukti';
@@ -733,13 +727,11 @@ function injectUI() {
       });
     }
   });
-  
+
   // Restore State on Load
   chrome.storage.local.get([
-    'username', 'password', 'dosen', 'rowNumber', 'semester', 'queue', 'currentIndex', 'automatorActive', 'csvFileName'
+    'dosen', 'rowNumber', 'semester', 'queue', 'currentIndex', 'automatorActive', 'csvFileName'
   ], (res) => {
-    if (res.username) usernameInput.value = res.username;
-    if (res.password) passwordInput.value = res.password;
     if (res.dosen) dosenInput.value = res.dosen;
     if (res.rowNumber) rowInput.value = res.rowNumber;
     if (res.semester) semesterInput.value = res.semester;
@@ -751,7 +743,7 @@ function injectUI() {
     if (res.queue) {
       renderQueue(res.queue, res.currentIndex || 0);
     }
-    
+
     // Check IndexedDB file count to display
     openDB().then((db) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
@@ -767,9 +759,9 @@ function injectUI() {
         }
       };
     });
-    
+
     checkReadyState();
-    
+
     if (res.automatorActive) {
       setAutomatingUI(true);
       panel.classList.add('show');
@@ -781,7 +773,7 @@ function injectUI() {
 function checkReadyState() {
   const dosen = shadowRoot.getElementById('dosen-input').value.trim();
   const startBtn = shadowRoot.getElementById('start-btn');
-  
+
   chrome.storage.local.get(['queue'], (res) => {
     if (dosen && res.queue && res.queue.length > 0) {
       startBtn.disabled = false;
@@ -795,7 +787,7 @@ function setAutomatingUI(active) {
   const startBtn = shadowRoot.getElementById('start-btn');
   const banner = shadowRoot.getElementById('status-banner');
   const fab = shadowRoot.querySelector('.fab');
-  
+
   if (active) {
     startBtn.textContent = '⏸ Jeda Pengisian';
     startBtn.classList.remove('btn-primary');
@@ -822,23 +814,23 @@ function renderQueue(queue, currentIndex) {
   const container = shadowRoot.getElementById('queue-list');
   const section = shadowRoot.getElementById('queue-section');
   const title = shadowRoot.getElementById('queue-title');
-  
+
   if (!queue || queue.length === 0) {
     section.style.display = 'none';
     return;
   }
-  
+
   section.style.display = 'block';
   title.textContent = `Antrean Logbook (${queue.length} baris)`;
   container.innerHTML = '';
-  
+
   queue.forEach((row, i) => {
     const item = document.createElement('div');
     item.className = 'queue-item';
-    
+
     let statusClass = 'status-pending';
     let statusLabel = 'Menunggu';
-    
+
     if (i < currentIndex) {
       statusClass = 'status-success';
       statusLabel = 'Selesai';
@@ -846,7 +838,7 @@ function renderQueue(queue, currentIndex) {
       statusClass = 'status-filling';
       statusLabel = 'Sedang Diisi';
     }
-    
+
     item.innerHTML = `
       <span class="queue-item-info">
         <span class="queue-item-date">${row.tanggal}</span>
@@ -858,15 +850,69 @@ function renderQueue(queue, currentIndex) {
   });
 }
 
+// Helper to wait for an element to appear in the DOM (similar to Playwright's auto-waiting)
+function waitForElement(selector, timeout = 8000) {
+  return new Promise((resolve, reject) => {
+    const el = document.querySelector(selector);
+    if (el) return resolve(el);
+    
+    const observer = new MutationObserver(() => {
+      const el = document.querySelector(selector);
+      if (el) {
+        observer.disconnect();
+        resolve(el);
+      }
+    });
+    
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    
+    setTimeout(() => {
+      observer.disconnect();
+      const el = document.querySelector(selector);
+      if (el) resolve(el);
+      else reject(new Error(`Timeout waiting for selector: ${selector}`));
+    }, timeout);
+  });
+}
+
+// Helper to wait for the loose date input of the form to load (case-insensitive match)
+function waitForFormInputs(timeout = 8000) {
+  return new Promise((resolve, reject) => {
+    const check = () => {
+      return Array.from(document.querySelectorAll('input')).find(el => {
+        const ph = el.getAttribute('placeholder') || '';
+        return ph.toLowerCase().includes('tanggal');
+      });
+    };
+    
+    if (check()) return resolve();
+    
+    const observer = new MutationObserver(() => {
+      if (check()) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    
+    setTimeout(() => {
+      observer.disconnect();
+      if (check()) resolve();
+      else reject(new Error('Timeout waiting for form inputs to render'));
+    }, timeout);
+  });
+}
+
 // core automation steps matching Python's Playwright code
 async function runAutomationStep() {
-  chrome.storage.local.get(['automatorActive', 'queue', 'currentIndex', 'dosen', 'rowNumber', 'semester', 'username', 'password'], async (res) => {
+  chrome.storage.local.get(['automatorActive', 'queue', 'currentIndex', 'dosen', 'rowNumber', 'semester'], async (res) => {
     if (!res.automatorActive || !res.queue || res.currentIndex === undefined) return;
-    
+
     const queue = res.queue;
     const idx = res.currentIndex;
     const dosenName = res.dosen;
-    
+
     if (idx >= queue.length) {
       // Completed!
       chrome.storage.local.set({ automatorActive: false }, () => {
@@ -878,103 +924,132 @@ async function runAutomationStep() {
       });
       return;
     }
-    
+
     const pageType = getPageType();
     const row = queue[idx];
-    
+
     if (pageType === 'login') {
-      updateStatusText('Melakukan masuk log otomatis ke Portal...');
-      
-      const uInput = document.querySelector('input[placeholder="Username"]');
-      const pInput = document.querySelector('input[placeholder="Password"]');
-      const lBtn = Array.from(document.querySelectorAll('button, input[type="submit"]')).find(el => el.textContent.trim() === 'Masuk' || el.value === 'Masuk');
-      
-      if (uInput && pInput && lBtn && res.username && res.password) {
-        uInput.value = res.username;
-        uInput.dispatchEvent(new Event('input', { bubbles: true }));
-        uInput.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        pInput.value = res.password;
-        pInput.dispatchEvent(new Event('input', { bubbles: true }));
-        pInput.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        await new Promise(r => setTimeout(r, 800));
-        lBtn.click();
-      } else {
-        updateStatusText('⚠️ Tidak dapat masuk log otomatis. Silakan isi kredensial di panel ekstensi terlebih dahulu.');
-        chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
-      }
-      
+      updateStatusText('⚠️ Silakan lakukan login secara manual di halaman ini terlebih dahulu.');
+      chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+      return;
     } else if (pageType === 'aktivitas') {
-      updateStatusText(`[${idx+1}/${queue.length}] Mencari baris nomor ${res.rowNumber} untuk semester ${res.semester}...`);
-      
-      const rows = Array.from(document.querySelectorAll('table tbody tr'));
-      const targetRow = rows.find(r => {
+      const rowNum = (res.rowNumber && res.rowNumber.trim()) || "1";
+      const semName = (res.semester && res.semester.trim()) || "2025/2026 Semester Genap";
+
+      updateStatusText(`[${idx + 1}/${queue.length}] Mencari baris nomor ${rowNum} untuk semester ${semName}...`);
+
+      const rows = Array.from(document.querySelectorAll('table tr'));
+      const dataRows = rows.filter(r => r.querySelector('td'));
+
+      if (dataRows.length === 0) {
+        updateStatusText('❌ Tidak ditemukan tabel data di halaman ini. Pastikan Anda berada di halaman Aktivitas.');
+        chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+        return;
+      }
+
+      const targetRow = dataRows.find(r => {
+        const cells = Array.from(r.querySelectorAll('td'));
+        if (cells.length < 3) return false;
+
+        const cellNo = cells[0].textContent.trim();
         const text = r.textContent || '';
-        return text.includes(res.rowNumber) && text.includes(res.semester);
+        const cleanText = text.replace(/\s+/g, ' ').toLowerCase();
+        const cleanSem = semName.replace(/\s+/g, ' ').toLowerCase();
+
+        return cellNo === rowNum && cleanText.includes(cleanSem);
       });
-      
+
       if (targetRow) {
         const links = targetRow.querySelectorAll('a');
         if (links.length >= 3) {
-          updateStatusText(`[${idx+1}/${queue.length}] Membuka halaman daftar logbook...`);
-          links[2].click();
+          updateStatusText(`[${idx + 1}/${queue.length}] Membuka halaman daftar logbook...`);
+          const href = links[2].getAttribute('href');
+          if (href) {
+            window.location.href = new URL(href, window.location.origin).href;
+          } else {
+            links[2].click();
+          }
         } else {
           updateStatusText('❌ Baris ditemukan, tetapi tautan logbook tidak ditemukan.');
           chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
         }
       } else {
-        updateStatusText(`❌ Baris No: "${res.rowNumber}" & Semester: "${res.semester}" tidak ditemukan.`);
+        const availableRows = dataRows.map(r => {
+          const cells = Array.from(r.querySelectorAll('td'));
+          const noVal = cells[0] ? cells[0].textContent.trim() : '?';
+          const semVal = cells[2] ? cells[2].textContent.trim().replace(/\s+/g, ' ') : '';
+          return `[No ${noVal}: "${semVal}"]`;
+        }).join(', ');
+
+        updateStatusText(`❌ Baris No: "${rowNum}" & Semester: "${semName}" tidak ditemukan. Pilihan yang ada: ${availableRows}`);
         chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
       }
-      
     } else if (pageType === 'log_list') {
-      updateStatusText(`[${idx+1}/${queue.length}] Membuka formulir pengisian (menekan 'Tambah')...`);
-      
-      const tambahBtn = Array.from(document.querySelectorAll('a, button')).find(el => el.textContent.trim() === 'Tambah');
+      updateStatusText(`[${idx + 1}/${queue.length}] Membuka formulir pengisian (menekan 'Tambah')...`);
+
+      const tambahBtn = Array.from(document.querySelectorAll('a, button')).find(el => el.textContent.trim() === 'Tambah' || el.textContent.includes('Tambah'));
       if (tambahBtn) {
-        tambahBtn.click();
+        const href = tambahBtn.getAttribute('href');
+        if (href && href !== '#' && !href.startsWith('javascript:')) {
+          window.location.href = new URL(href, window.location.origin).href;
+        } else {
+          tambahBtn.click();
+          // Since it's a modal popup on the same page, wait 600ms for it to open and run the next step
+          setTimeout(runAutomationStep, 600);
+        }
       } else {
         updateStatusText('❌ Gagal menemukan tombol "Tambah" di halaman logbook.');
         chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
       }
-      
+
     } else if (pageType === 'form') {
-      updateStatusText(`[${idx+1}/${queue.length}] Mengisi: ${row.keterangan || 'Entri Kegiatan'}...`);
-      
+      updateStatusText(`[${idx + 1}/${queue.length}] Menunggu formulir dimuat...`);
       try {
+        await waitForFormInputs(10000);
+      } catch (err) {
+        updateStatusText('❌ Gagal memuat formulir: Input Tanggal tidak ditemukan.');
+        chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+        return;
+      }
+
+      updateStatusText(`[${idx + 1}/${queue.length}] Mengisi: ${row.keterangan || 'Entri Kegiatan'}...`);
+
+      try {
+        // Find inputs using loose case-insensitive placeholder matching
+        const allInputs = Array.from(document.querySelectorAll('input, textarea'));
+        
         // 1. Tanggal
-        const tglInput = document.querySelector('input[placeholder="Tanggal"]');
+        const tglInput = allInputs.find(el => (el.getAttribute('placeholder') || '').toLowerCase().includes('tanggal'));
         if (tglInput) {
           tglInput.value = row.tanggal;
           tglInput.dispatchEvent(new Event('input', { bubbles: true }));
           tglInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        
+
         // 2. Waktu Selesai
-        const selesaiInput = document.querySelector('input[placeholder="Waktu Selesai"]');
+        const selesaiInput = allInputs.find(el => (el.getAttribute('placeholder') || '').toLowerCase().includes('selesai'));
         if (selesaiInput) {
           selesaiInput.value = row.selesai;
           selesaiInput.dispatchEvent(new Event('input', { bubbles: true }));
           selesaiInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        
+
         // 3. Waktu Mulai
-        const mulaiInput = document.querySelector('input[placeholder="Waktu Mulai"]');
+        const mulaiInput = allInputs.find(el => (el.getAttribute('placeholder') || '').toLowerCase().includes('mulai'));
         if (mulaiInput) {
           mulaiInput.value = row.mulai;
           mulaiInput.dispatchEvent(new Event('input', { bubbles: true }));
           mulaiInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        
+
         // 4. Berita Acara (Custom Select Dropdown)
-        let selectTrigger = document.querySelector('[role="textbox"]') || 
-                            Array.from(document.querySelectorAll('.select2-selection, .ant-select-selector, .form-control')).find(el => el.textContent.includes('-- Pilih --'));
-        
+        let selectTrigger = document.querySelector('[role="textbox"]') ||
+          Array.from(document.querySelectorAll('.select2-selection, .ant-select-selector, .form-control')).find(el => el.textContent.includes('-- Pilih --'));
+
         if (selectTrigger) {
           selectTrigger.click();
           await new Promise(r => setTimeout(r, 400));
-          
+
           let optionText = '';
           const beritaClean = row.berita.toLowerCase().replace(/ /g, '');
           if (beritaClean === 'kegiatan') {
@@ -984,7 +1059,7 @@ async function runAutomationStep() {
           } else if (beritaClean === 'bimbingan') {
             optionText = 'Berita Acara Pembimbingan';
           }
-          
+
           if (optionText) {
             const options = Array.from(document.querySelectorAll('[role="option"], .select2-results__option, option'));
             const targetOption = options.find(opt => opt.textContent.includes(optionText));
@@ -1002,13 +1077,16 @@ async function runAutomationStep() {
             }
           }
         }
-        
+
         // 5. Dosen Penggerak
         const labels = Array.from(document.querySelectorAll('label'));
         const targetLabel = labels.find(l => l.textContent.toLowerCase().includes(dosenName.toLowerCase()));
         if (targetLabel) {
           const inputId = targetLabel.getAttribute('for');
-          const input = inputId ? document.getElementById(inputId) : targetLabel.querySelector('input[type="checkbox"]');
+          let input = inputId ? document.getElementById(inputId) : targetLabel.querySelector('input[type="checkbox"], input[type="radio"]');
+          if (!input) {
+            input = targetLabel.parentElement.querySelector('input[type="checkbox"], input[type="radio"]');
+          }
           if (input) {
             input.checked = true;
             input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1016,14 +1094,14 @@ async function runAutomationStep() {
             targetLabel.click();
           }
         }
-        
+
         // 6. Tipe
         const typeClean = row.tipe.toLowerCase().replace(/ /g, '');
         let typeLabelText = '';
         if (typeClean === 'offline') typeLabelText = 'Offline';
         else if (typeClean === 'online') typeLabelText = 'Online';
         else if (typeClean === 'hybrid') typeLabelText = 'Hybrid';
-        
+
         if (typeLabelText) {
           const typeLabel = labels.find(l => l.textContent.trim() === typeLabelText);
           if (typeLabel) {
@@ -1037,23 +1115,23 @@ async function runAutomationStep() {
             }
           }
         }
-        
+
         // 7. Lokasi
-        const lokasiInput = document.querySelector('input[placeholder="Lokasi"]');
+        const lokasiInput = allInputs.find(el => el.tagName === 'INPUT' && (el.getAttribute('placeholder') || '').toLowerCase().includes('lokasi'));
         if (lokasiInput) {
           lokasiInput.value = row.lokasi;
           lokasiInput.dispatchEvent(new Event('input', { bubbles: true }));
           lokasiInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        
+
         // 8. Topik (Keterangan)
-        const topikInput = document.querySelector('input[placeholder="Topik"]') || document.querySelector('textarea[placeholder="Topik"]');
+        const topikInput = allInputs.find(el => (el.getAttribute('placeholder') || '').toLowerCase().includes('topik'));
         if (topikInput) {
           topikInput.value = row.keterangan;
           topikInput.dispatchEvent(new Event('input', { bubbles: true }));
           topikInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        
+
         // 9. File Upload (Programmatic setting using DataTransfer from IndexedDB)
         const fileInput = document.querySelector('#File');
         if (fileInput && row.file) {
@@ -1064,33 +1142,36 @@ async function runAutomationStep() {
             dataTransfer.items.add(fileObj);
             fileInput.files = dataTransfer.files;
             fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-            updateStatusText(`[${idx+1}/${queue.length}] Formulir terisi. Mengunggah: ${filename}`);
+            updateStatusText(`[${idx + 1}/${queue.length}] Formulir terisi. Mengunggah: ${filename}`);
           } else {
             console.warn(`Berkas ${filename} tidak ditemukan di memori peramban IndexedDB.`);
-            updateStatusText(`[${idx+1}/${queue.length}] Formulir terisi. Berkas bukti tidak ditemukan di memori!`);
+            updateStatusText(`[${idx + 1}/${queue.length}] Formulir terisi. Berkas bukti tidak ditemukan di memori!`);
           }
         }
-        
+
         // Wait 1.5 seconds for visual confirmation and inputs to process
         await new Promise(r => setTimeout(r, 1500));
-        
+
         // Click Simpan (Submit Form)
         const simpanBtn = Array.from(document.querySelectorAll('button, input[type="submit"]')).find(el => el.textContent.trim() === 'Simpan' || el.value === 'Simpan');
         if (simpanBtn) {
           chrome.storage.local.set({ currentIndex: idx + 1 }, () => {
             simpanBtn.click();
+            // Since it's inside a modal (which might submit via AJAX and close without page reload),
+            // wait 2.5 seconds to allow submission to finish, then trigger the next step!
+            setTimeout(runAutomationStep, 2500);
           });
         } else {
           updateStatusText('❌ Gagal menemukan tombol "Simpan".');
           chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
         }
-        
+
       } catch (err) {
         console.error('Gagal mengisi baris data:', err);
         updateStatusText(`❌ Gagal mengisi baris data: ${err.message}`);
         chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
       }
-      
+
     } else {
       updateStatusText('Silakan buka halaman Aktivitas MBKM atau Logbook Portal Mahasiswa IPB untuk memulai otomasi.');
       chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
