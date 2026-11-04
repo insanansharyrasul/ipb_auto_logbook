@@ -207,10 +207,9 @@ ipb_auto_logbook/
 │   │   ├── papaparse.min.js# Third-party CSV parser
 │   │   ├── popup.html      # Companion extension popup
 │   │   └── popup.js        # Logic for the companion popup
-│   └── gui/                # PyQt6 Desktop GUI modular components
-│       ├── _constants.py   # Visual style tokens, constants, and helper texts
-│       ├── _widgets.py     # Reusable custom UI components (tooltips, etc.)
-│       └── ...             # Tab-specific modular implementations
+│   └── gui/                # PyQt6 + QtQuick desktop GUI
+│       ├── controller.py   # QtQuick-facing app controller and CSV row model
+│       └── qml/            # Main window, pages, components, and icons
 ├── files/                  # Directory where activity proof files should be placed
 └── data.csv                # Sample logbook CSV template
 ```

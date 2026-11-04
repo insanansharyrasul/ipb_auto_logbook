@@ -3,27 +3,20 @@
 # Run: pyinstaller ipb_auto_logbook.spec
 #
 # No Chromium is bundled: the app drives the user's system Edge/Chrome
-# (see Automator._launch_browser). Only Playwright's own driver is collected.
+# (see LogbookAutomator._launch_browser). Only Playwright's own driver is collected.
 
 from PyInstaller.utils.hooks import collect_all
 
-datas, binaries, hiddenimports = [], [], []
-for pkg in ("playwright",):
-    d, b, h = collect_all(pkg)
-    datas += d
-    binaries += b
-    hiddenimports += h
+datas, binaries, hiddenimports = collect_all("playwright")
+datas += [("src/gui/qml", "src/gui/qml")]
+hiddenimports += ["PyQt6.QtQml", "PyQt6.QtQuick", "PyQt6.QtSvg"]
 
 a = Analysis(
     ["gui_app.py"],
-    pathex=[],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
-    hookspath=[],
-    runtime_hooks=[],
     excludes=["pandas", "numpy", "tkinter"],
-    noarchive=False,
 )
 pyz = PYZ(a.pure)
 

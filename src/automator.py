@@ -1,14 +1,23 @@
 """Core logbook automation logic for IPB Student Portal."""
 
 import csv
+import json
 import sys
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Callable, Optional
 
 from playwright.sync_api import sync_playwright
+
+CSV_COLUMNS = ["tanggal", "mulai", "selesai", "keterangan", "file", "tipe", "lokasi", "berita"]
+TIPE_OPTIONS = ("offline", "online", "hybrid")  # portal labels are the capitalized form
+BERITA_OPTIONS = {
+    "kegiatan": "Berita Acara Kegiatan",
+    "ujian": "Berita Acara Ujian",
+    "bimbingan": "Berita Acara Pembimbingan (Konsultasi/Mentoring/Coaching)",
+}
 
 
 def _base_dir() -> Path:
@@ -33,53 +42,28 @@ def clean_string(string: str) -> str:
 
 
 @dataclass
-class LogbookRow:
-    """A single logbook entry."""
-
-    tanggal: str  # DD/MM/YYYY
-    mulai: str  # HH:MM
-    selesai: str  # HH:MM
-    keterangan: str  # description / topic
-    file: str  # relative path under files/
-    tipe: str  # offline / online / hybrid
-    lokasi: str  # location
-    berita: str  # kegiatan / ujian / bimbingan
-
-
-@dataclass
 class LogbookConfig:
     """Configuration for a logbook automation run."""
 
-    username: str
-    password: str
-    dosen: str
-    row_number: str
-    semester: str
+    username: str = ""
+    password: str = ""
+    dosen: str = ""
+    row_number: str = ""
+    semester: str = ""
     csv_path: str = "data.csv"
     headless: bool = False
     slow_mo: int = 200
 
     def save_to_file(self, path: str) -> None:
         """Save config to a JSON file (excluding password)."""
-        import json
-
-        data = {
-            "username": self.username,
-            "dosen": self.dosen,
-            "row_number": self.row_number,
-            "semester": self.semester,
-            "csv_path": self.csv_path,
-            "headless": self.headless,
-            "slow_mo": self.slow_mo,
-        }
+        data = asdict(self)
+        del data["password"]
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
 
     @classmethod
     def load_from_file(cls, path: str) -> "LogbookConfig":
         """Load config from a JSON file. Password must be provided separately."""
-        import json
-
         with open(path, "r") as f:
             data = json.load(f)
         return cls(password="", **data)
@@ -105,16 +89,10 @@ class LogbookAutomator:
         self._progress_cb = progress_callback or (lambda *_: None)
         self._log_cb = log_callback or (lambda _: None)
         self._stop_flag = threading.Event()
-        self._running = False
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def run(self) -> bool:
         """Execute the automation. Returns True on success, False on failure/stop."""
         self._stop_flag.clear()
-        self._running = True
 
         try:
             with open(
@@ -122,55 +100,32 @@ class LogbookAutomator:
                 newline="",
                 encoding="utf-8",
             ) as f:
-                rows = list(csv.DictReader(f))
-            total = len(rows)
+                rows = [{c: r.get(c) or "" for c in CSV_COLUMNS} for r in csv.DictReader(f)]
         except Exception as e:
             self._log_cb(f"❌ Failed to read CSV: {e}")
-            self._running = False
             return False
+        total = len(rows)
 
+        # Leaving the sync_playwright() block closes the browser on every exit path.
         try:
             with sync_playwright() as p:
-                browser = self._launch_browser(p)
-                page = browser.new_page()
-
-                if not self._login(page):
-                    browser.close()
-                    self._running = False
+                page = self._launch_browser(p).new_page()
+                if not (self._login(page) and self._navigate_to_form(page)):
                     return False
 
-                if not self._navigate_to_form(page):
-                    browser.close()
-                    self._running = False
-                    return False
-
-                for i in range(total):
+                for i, row in enumerate(rows):
                     if self._stop_flag.is_set():
                         self._log_cb("Stopped by user.")
-                        browser.close()
-                        self._running = False
                         return False
 
-                    r = rows[i]
-                    row = LogbookRow(
-                        tanggal=str(r.get("tanggal") or ""),
-                        mulai=str(r.get("mulai") or ""),
-                        selesai=str(r.get("selesai") or ""),
-                        keterangan=str(r.get("keterangan") or ""),
-                        file=str(r.get("file") or ""),
-                        tipe=str(r.get("tipe") or ""),
-                        lokasi=str(r.get("lokasi") or ""),
-                        berita=str(r.get("berita") or ""),
-                    )
-
                     self._progress_cb(i, total, f"Filling entry {i + 1}/{total}...")
-                    self._log_cb(f"Entry {i + 1}/{total}: {row.keterangan}")
+                    self._log_cb(f"Entry {i + 1}/{total}: {row['keterangan']}")
 
                     if not self._fill_entry(page, row):
                         self._log_cb(f"Skipped entry {i + 1} due to error")
                         continue
 
-                    self._click_save(page)
+                    page.get_by_role("button", name="Simpan").click()
                     time.sleep(1)
 
                     # Click "Tambah" for next entry
@@ -182,24 +137,17 @@ class LogbookAutomator:
 
                 self._progress_cb(total, total, "Done!")
                 self._log_cb("All entries submitted.")
-                browser.close()
 
         except Exception as e:
             self._log_cb(f"❌ Unexpected error: {e}")
-            self._running = False
             return False
 
-        self._running = False
         return True
 
     def stop(self) -> None:
         """Request graceful stop at the next entry boundary."""
         self._log_cb("⏸ Stop requested... waiting for current entry to finish.")
         self._stop_flag.set()
-
-    @property
-    def is_running(self) -> bool:
-        return self._running
 
     # ------------------------------------------------------------------
     # Steps
@@ -252,66 +200,54 @@ class LogbookAutomator:
             self._log_cb(f"❌ Navigation failed: {e}")
             return False
 
-    def _fill_entry(self, page, row: LogbookRow) -> bool:
+    def _fill_entry(self, page, row: dict[str, str]) -> bool:
+        """Fill one form entry from a CSV row (keys: CSV_COLUMNS)."""
         try:
             # Tanggal
             page.get_by_placeholder("Tanggal").click()
-            page.get_by_placeholder("Tanggal").type(clean_string(row.tanggal))
+            page.get_by_placeholder("Tanggal").type(clean_string(row["tanggal"]))
             page.get_by_placeholder("Tanggal").press("Escape")
 
             # Waktu Selesai
             page.get_by_placeholder("Waktu Selesai").click()
             for _ in range(5):
                 page.keyboard.press("Backspace")
-            page.get_by_placeholder("Waktu Selesai").type(clean_string(row.selesai))
+            page.get_by_placeholder("Waktu Selesai").type(clean_string(row["selesai"]))
             page.get_by_placeholder("Tanggal").press("Escape")
 
             # Waktu Mulai
             page.get_by_placeholder("Waktu Mulai").click()
             for _ in range(5):
                 page.keyboard.press("Backspace")
-            page.get_by_placeholder("Waktu Mulai").type(clean_string(row.mulai))
+            page.get_by_placeholder("Waktu Mulai").type(clean_string(row["mulai"]))
             page.get_by_placeholder("Tanggal").press("Escape")
 
             # Berita Acara
             page.get_by_role("textbox", name="-- Pilih --").click()
-            berita_clean = clean_string(row.berita)
-            if berita_clean == "kegiatan":
-                page.get_by_role("option", name="Berita Acara Kegiatan").click()
-            elif berita_clean == "ujian":
-                page.get_by_role("option", name="Berita Acara Ujian").click()
-            elif berita_clean == "bimbingan":
-                page.get_by_role(
-                    "option",
-                    name="Berita Acara Pembimbingan (Konsultasi/Mentoring/Coaching)",
-                ).click()
-            else:
-                self._log_cb(f"Unknown berita type: {row.berita}")
+            berita = BERITA_OPTIONS.get(clean_string(row["berita"]))
+            if not berita:
+                self._log_cb(f"Unknown berita type: {row['berita']}")
                 return False
+            page.get_by_role("option", name=berita).click()
 
             # Dosen Penggerak
             page.get_by_label(self.config.dosen).check()
 
             # Tipe
-            tipe_clean = clean_string(row.tipe)
-            if tipe_clean == "offline":
-                page.get_by_label("Offline").check()
-            elif tipe_clean == "online":
-                page.get_by_label("Online").check()
-            elif tipe_clean == "hybrid":
-                page.get_by_label("Hybrid").check()
-            else:
-                self._log_cb(f"Unknown tipe: {row.tipe}")
+            tipe = clean_string(row["tipe"])
+            if tipe not in TIPE_OPTIONS:
+                self._log_cb(f"Unknown tipe: {row['tipe']}")
                 return False
+            page.get_by_label(tipe.capitalize()).check()
 
             # Lokasi
-            page.get_by_placeholder("Lokasi").fill(row.lokasi)
+            page.get_by_placeholder("Lokasi").fill(row["lokasi"])
 
             # Topik
-            page.get_by_placeholder("Topik").fill(row.keterangan)
+            page.get_by_placeholder("Topik").fill(row["keterangan"])
 
             # File
-            file_path = resolve_to_absolute_path(row.file)
+            file_path = resolve_to_absolute_path(row["file"])
             if not Path(file_path).exists():
                 self._log_cb(f"File not found: {file_path}")
                 return False
@@ -322,9 +258,6 @@ class LogbookAutomator:
         except Exception as e:
             self._log_cb(f"❌ Error filling entry: {e}")
             return False
-
-    def _click_save(self, page) -> None:
-        page.get_by_role("button", name="Simpan").click()
 
 
 if __name__ == "__main__":
@@ -345,13 +278,7 @@ if __name__ == "__main__":
         cfg.save_to_file(f.name)
         loaded = LogbookConfig.load_from_file(f.name)
 
-    assert loaded.username == cfg.username
-    assert loaded.dosen == cfg.dosen
-    assert loaded.row_number == cfg.row_number
-    assert loaded.semester == cfg.semester
-    assert loaded.csv_path == cfg.csv_path
-    assert loaded.headless == cfg.headless
-    assert loaded.slow_mo == cfg.slow_mo
+    assert loaded == LogbookConfig(**{**asdict(cfg), "password": ""})
     assert loaded.password == "", "password must never be persisted"
 
     # Dev-mode base dir resolves under the project root, not sys.executable.

@@ -1,0 +1,6 @@
+{
+  "qt-core.qtInstallationRoot": "${workspaceFolder}/.venv/lib/python3.12/site-packages/PyQt6/Qt6",
+  "qt-qml.qmlls.additionalImportPaths": [
+    "${workspaceFolder}/.venv/lib/python3.12/site-packages/PyQt6/Qt6/qml"
+  ]
+}

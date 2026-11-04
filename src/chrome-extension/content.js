@@ -16,38 +16,18 @@ function openDB() {
   });
 }
 
-async function saveFileToDB(name, file) {
+// Run one request against the proof-file store, resolving with its result
+async function idb(mode, makeRequest) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.put(file, name);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function getFileFromDB(name) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.get(name);
+    const req = makeRequest(db.transaction(STORE_NAME, mode).objectStore(STORE_NAME));
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
-
-async function clearDB() {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.clear();
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
+const saveFileToDB = (name, file) => idb('readwrite', store => store.put(file, name));
+const getFileFromDB = (name) => idb('readonly', store => store.get(name));
+const clearDB = () => idb('readwrite', store => store.clear());
 
 // CSV Parsing is handled globally by PapaParse library
 
@@ -56,16 +36,27 @@ function downloadCSVTemplate() {
   const headers = '"tanggal","mulai","selesai","keterangan","file","tipe","lokasi","berita"\n';
   const sampleRow = '"04/02/2026","15:00","16:00","Diskusi project dan pembagian jobdesk","files/bukti_04_02_2026.png","offline","SC IPB","kegiatan"\n';
 
-  const blob = new Blob([headers + sampleRow], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", "data_logbook_template.csv");
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([headers + sampleRow], { type: 'text/csv;charset=utf-8;' }));
+  link.download = 'data_logbook_template.csv';
   link.click();
-  document.body.removeChild(link);
 }
+
+// Portal inputs are found by placeholder, case-insensitively (like Playwright's get_by_placeholder)
+function byPlaceholder(text, selector = 'input, textarea') {
+  return Array.from(document.querySelectorAll(selector))
+    .find(el => (el.getAttribute('placeholder') || '').toLowerCase().includes(text));
+}
+
+function fillByPlaceholder(text, value, selector) {
+  const el = byPlaceholder(text, selector);
+  if (!el) return;
+  el.value = value;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+const hasDateInput = () => Boolean(byPlaceholder('tanggal', 'input'));
 
 // Check current page type based on URL
 function getPageType() {
@@ -73,15 +64,7 @@ function getPageType() {
   if (url.includes('Account/Login')) {
     return 'login';
   }
-  
-  // Helper to check if date input is present in DOM using case-insensitive placeholder matching
-  const hasDateInput = () => {
-    return Array.from(document.querySelectorAll('input')).some(el => {
-      const ph = el.getAttribute('placeholder') || '';
-      return ph.toLowerCase().includes('tanggal');
-    });
-  };
-  
+
   // Check Logbook pages first to avoid partial string matching conflict with AktivitasKampusMerdeka
   if (url.includes('LogAktivitasKampusMerdeka') || url.includes('LogBookAktivitas')) {
     if (url.includes('Create') || url.includes('Edit') || hasDateInput()) {
@@ -837,58 +820,32 @@ function renderQueue(queue, currentIndex) {
   });
 }
 
-// Helper to wait for an element to appear in the DOM (similar to Playwright's auto-waiting)
-function waitForElement(selector, timeout = 8000) {
-  return new Promise((resolve, reject) => {
-    const el = document.querySelector(selector);
-    if (el) return resolve(el);
-    
-    const observer = new MutationObserver(() => {
-      const el = document.querySelector(selector);
-      if (el) {
-        observer.disconnect();
-        resolve(el);
-      }
-    });
-    
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-    
-    setTimeout(() => {
-      observer.disconnect();
-      const el = document.querySelector(selector);
-      if (el) resolve(el);
-      else reject(new Error(`Timeout waiting for selector: ${selector}`));
-    }, timeout);
-  });
-}
-
-// Helper to wait for the loose date input of the form to load (case-insensitive match)
+// Wait for the form's Tanggal input to render
 function waitForFormInputs(timeout = 8000) {
   return new Promise((resolve, reject) => {
-    const check = () => {
-      return Array.from(document.querySelectorAll('input')).find(el => {
-        const ph = el.getAttribute('placeholder') || '';
-        return ph.toLowerCase().includes('tanggal');
-      });
-    };
-    
-    if (check()) return resolve();
-    
+    if (hasDateInput()) return resolve();
+
     const observer = new MutationObserver(() => {
-      if (check()) {
+      if (hasDateInput()) {
         observer.disconnect();
         resolve();
       }
     });
-    
+
     observer.observe(document.documentElement, { childList: true, subtree: true });
-    
+
     setTimeout(() => {
       observer.disconnect();
-      if (check()) resolve();
+      if (hasDateInput()) resolve();
       else reject(new Error('Timeout waiting for form inputs to render'));
     }, timeout);
   });
+}
+
+// Stop the run, optionally showing why
+function halt(text) {
+  if (text) updateStatusText(text);
+  chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
 }
 
 // core automation steps matching Python's Playwright code
@@ -902,13 +859,8 @@ async function runAutomationStep() {
 
     if (idx >= queue.length) {
       // Completed!
-      chrome.storage.local.set({ automatorActive: false }, () => {
-        setAutomatingUI(false);
-        updateStatusText('🎉 Berhasil! Semua entri telah terkirim.');
-        if (shadowRoot) {
-          renderQueue(queue, idx);
-        }
-      });
+      halt('🎉 Berhasil! Semua entri telah terkirim.');
+      renderQueue(queue, idx);
       return;
     }
 
@@ -916,8 +868,7 @@ async function runAutomationStep() {
     const row = queue[idx];
 
     if (pageType === 'login') {
-      updateStatusText('⚠️ Silakan lakukan login secara manual di halaman ini terlebih dahulu.');
-      chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+      halt('⚠️ Silakan lakukan login secara manual di halaman ini terlebih dahulu.');
       return;
     } else if (pageType === 'aktivitas') {
       const rowNum = (res.rowNumber && res.rowNumber.trim()) || "1";
@@ -929,8 +880,7 @@ async function runAutomationStep() {
       const dataRows = rows.filter(r => r.querySelector('td'));
 
       if (dataRows.length === 0) {
-        updateStatusText('❌ Tidak ditemukan tabel data di halaman ini. Pastikan Anda berada di halaman Aktivitas.');
-        chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+        halt('❌ Tidak ditemukan tabel data di halaman ini. Pastikan Anda berada di halaman Aktivitas.');
         return;
       }
 
@@ -957,8 +907,7 @@ async function runAutomationStep() {
             links[2].click();
           }
         } else {
-          updateStatusText('❌ Baris ditemukan, tetapi tautan logbook tidak ditemukan.');
-          chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+          halt('❌ Baris ditemukan, tetapi tautan logbook tidak ditemukan.');
         }
       } else {
         const availableRows = dataRows.map(r => {
@@ -968,8 +917,7 @@ async function runAutomationStep() {
           return `[No ${noVal}: "${semVal}"]`;
         }).join(', ');
 
-        updateStatusText(`❌ Baris No: "${rowNum}" & Semester: "${semName}" tidak ditemukan. Pilihan yang ada: ${availableRows}`);
-        chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+        halt(`❌ Baris No: "${rowNum}" & Semester: "${semName}" tidak ditemukan. Pilihan yang ada: ${availableRows}`);
       }
     } else if (pageType === 'log_list') {
       updateStatusText(`[${idx + 1}/${queue.length}] Membuka formulir pengisian (menekan 'Tambah')...`);
@@ -985,8 +933,7 @@ async function runAutomationStep() {
           setTimeout(runAutomationStep, 600);
         }
       } else {
-        updateStatusText('❌ Gagal menemukan tombol "Tambah" di halaman logbook.');
-        chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+        halt('❌ Gagal menemukan tombol "Tambah" di halaman logbook.');
       }
 
     } else if (pageType === 'form') {
@@ -994,40 +941,17 @@ async function runAutomationStep() {
       try {
         await waitForFormInputs(10000);
       } catch (err) {
-        updateStatusText('❌ Gagal memuat formulir: Input Tanggal tidak ditemukan.');
-        chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+        halt('❌ Gagal memuat formulir: Input Tanggal tidak ditemukan.');
         return;
       }
 
       updateStatusText(`[${idx + 1}/${queue.length}] Mengisi: ${row.keterangan || 'Entri Kegiatan'}...`);
 
       try {
-        // Find inputs using loose case-insensitive placeholder matching
-        const allInputs = Array.from(document.querySelectorAll('input, textarea'));
-        
-        // 1. Tanggal
-        const tglInput = allInputs.find(el => (el.getAttribute('placeholder') || '').toLowerCase().includes('tanggal'));
-        if (tglInput) {
-          tglInput.value = row.tanggal;
-          tglInput.dispatchEvent(new Event('input', { bubbles: true }));
-          tglInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-
-        // 2. Waktu Selesai
-        const selesaiInput = allInputs.find(el => (el.getAttribute('placeholder') || '').toLowerCase().includes('selesai'));
-        if (selesaiInput) {
-          selesaiInput.value = row.selesai;
-          selesaiInput.dispatchEvent(new Event('input', { bubbles: true }));
-          selesaiInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-
-        // 3. Waktu Mulai
-        const mulaiInput = allInputs.find(el => (el.getAttribute('placeholder') || '').toLowerCase().includes('mulai'));
-        if (mulaiInput) {
-          mulaiInput.value = row.mulai;
-          mulaiInput.dispatchEvent(new Event('input', { bubbles: true }));
-          mulaiInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        // 1-3. Tanggal, Waktu Selesai, Waktu Mulai
+        fillByPlaceholder('tanggal', row.tanggal);
+        fillByPlaceholder('selesai', row.selesai);
+        fillByPlaceholder('mulai', row.mulai);
 
         // 4. Berita Acara (Custom Select Dropdown)
         let selectTrigger = document.querySelector('[role="textbox"]') ||
@@ -1103,21 +1027,9 @@ async function runAutomationStep() {
           }
         }
 
-        // 7. Lokasi
-        const lokasiInput = allInputs.find(el => el.tagName === 'INPUT' && (el.getAttribute('placeholder') || '').toLowerCase().includes('lokasi'));
-        if (lokasiInput) {
-          lokasiInput.value = row.lokasi;
-          lokasiInput.dispatchEvent(new Event('input', { bubbles: true }));
-          lokasiInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-
-        // 8. Topik (Keterangan)
-        const topikInput = allInputs.find(el => (el.getAttribute('placeholder') || '').toLowerCase().includes('topik'));
-        if (topikInput) {
-          topikInput.value = row.keterangan;
-          topikInput.dispatchEvent(new Event('input', { bubbles: true }));
-          topikInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        // 7-8. Lokasi, Topik (Keterangan)
+        fillByPlaceholder('lokasi', row.lokasi, 'input');
+        fillByPlaceholder('topik', row.keterangan);
 
         // 9. File Upload (Programmatic setting using DataTransfer from IndexedDB)
         const fileInput = document.querySelector('#File');
@@ -1149,19 +1061,16 @@ async function runAutomationStep() {
             setTimeout(runAutomationStep, 2500);
           });
         } else {
-          updateStatusText('❌ Gagal menemukan tombol "Simpan".');
-          chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+          halt('❌ Gagal menemukan tombol "Simpan".');
         }
 
       } catch (err) {
         console.error('Gagal mengisi baris data:', err);
-        updateStatusText(`❌ Gagal mengisi baris data: ${err.message}`);
-        chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+        halt(`❌ Gagal mengisi baris data: ${err.message}`);
       }
 
     } else {
-      updateStatusText('Silakan buka halaman Aktivitas MBKM atau Logbook Portal Mahasiswa IPB untuk memulai otomasi.');
-      chrome.storage.local.set({ automatorActive: false }, () => setAutomatingUI(false));
+      halt('Silakan buka halaman Aktivitas MBKM atau Logbook Portal Mahasiswa IPB untuk memulai otomasi.');
     }
   });
 }

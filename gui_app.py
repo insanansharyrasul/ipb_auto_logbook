@@ -1,92 +1,40 @@
-"""
-IPB Auto Logbook Desktop GUI (PyQt6).
+"""IPB Auto Logbook Desktop GUI (PyQt6 + QtQuick/QML).
+
 Launch with:  python gui_app.py
 """
 
-from __future__ import annotations
-
+import os
 import sys
-from datetime import datetime
-from typing import Optional
+from pathlib import Path
 
-try:
-    from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget
-except ImportError:
-    print("PyQt6 is not installed.\nInstall it with:  pip install PyQt6")
-    sys.exit(1)
+os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
 
-from src.gui._about_mixin import AboutTabMixin
-from src.gui._config_mixin import ConfigTabMixin
-from src.gui._constants import APP_VERSION
-from src.gui._data_mixin import DataTabMixin
-from src.gui._run_mixin import RunTabMixin, _RunWorker
-from src.gui._widgets import InfoWidgetMixin
+from PyQt6.QtCore import QUrl
+from PyQt6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonInstance
+from PyQt6.QtWidgets import QApplication
 
+from src.gui.controller import AppController
 
-def _now_stamp() -> str:
-    return datetime.now().strftime("%H:%M:%S")
+APP_VERSION = "1.0.0"  # QML reads it as Qt.application.version
 
-
-class LogbookApp(
-    InfoWidgetMixin,
-    ConfigTabMixin,
-    DataTabMixin,
-    RunTabMixin,
-    AboutTabMixin,
-    QMainWindow,
-):
-    """Root application window, composes tabs via mixins."""
-
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.setWindowTitle(f"IPB Auto Logbook v{APP_VERSION}")
-        self.resize(900, 700)
-        self.setMinimumSize(800, 600)
-
-        # State
-        self._worker: Optional[_RunWorker] = None
-        self._table_rows: list[dict] = []
-
-        # Build UI
-        self._tabview = QTabWidget()
-        self.setCentralWidget(self._tabview)
-
-        self._build_config_tab()
-        self._build_data_tab()
-        self._build_run_tab()
-        self._build_about_tab()
-
-        self._tabview.setCurrentIndex(0)
-
-    # ------------------------------------------------------------------
-    # Log helpers
-    # ------------------------------------------------------------------
-
-    def _log(self, message: str) -> None:
-        self._append_log(f"[{_now_stamp()}] {message}")
-
-    def _append_log(self, text: str) -> None:
-        self._log_box.append(text)  # QTextEdit.append auto-scrolls to the bottom
-
-    def _clear_log(self) -> None:
-        self._log_box.clear()
-
-    # ------------------------------------------------------------------
-    # Close / cleanup
-    # ------------------------------------------------------------------
-
-    def closeEvent(self, event) -> None:
-        if self._worker is not None and self._worker.isRunning():
-            self._worker.automator.stop()
-            self._worker.wait(3000)  # let the current entry finish, then close
-        super().closeEvent(event)
+# PyInstaller points __file__ into the bundle, where the spec copies src/gui/qml.
+MAIN_QML = Path(__file__).resolve().parent / "src" / "gui" / "qml" / "Main.qml"
 
 
 def main() -> None:
     app = QApplication(sys.argv)
-    window = LogbookApp()
-    window.show()
+    app.setApplicationName("IPB Auto Logbook")
+    app.setApplicationVersion(APP_VERSION)
+
+    controller = AppController()
+    qmlRegisterSingletonInstance("App", 1, 0, "Controller", controller)
+    engine = QQmlApplicationEngine()
+    engine.load(QUrl.fromLocalFile(str(MAIN_QML)))
+
+    if not engine.rootObjects():
+        sys.exit(1)
+
+    app.aboutToQuit.connect(controller.shutdown)
     sys.exit(app.exec())
 
 
