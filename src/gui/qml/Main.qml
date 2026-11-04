@@ -14,7 +14,7 @@ ApplicationWindow {
     minimumWidth: 900
     minimumHeight: 640
     visible: true
-    title: "IPB Auto Logbook v" + Controller.appVersion
+    title: "IPB Auto Logbook v" + Qt.application.version
     color: Theme.background
 
     property int currentTab: 0

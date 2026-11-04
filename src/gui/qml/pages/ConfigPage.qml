@@ -32,7 +32,6 @@ Item {
                     spacing: Theme.spaceLg
                     FieldLabel { text: "Username" }
                     AppTextField {
-                        id: usernameField
                         Layout.fillWidth: true
                         text: Controller.username
                         onTextEdited: Controller.username = text
@@ -44,7 +43,6 @@ Item {
                     spacing: Theme.spaceLg
                     FieldLabel { text: "Password" }
                     AppTextField {
-                        id: passwordField
                         Layout.fillWidth: true
                         echoMode: TextInput.Password
                         text: Controller.password
@@ -62,10 +60,11 @@ Item {
                     spacing: Theme.spaceLg
                     FieldLabel {
                         text: "Dosen"
-                        info: Controller.dosenInfo
+                        info: "Nama Dosen Penggerak dari Student Portal.\n"
+                              + "Kemahasiswaan → Aktivitas → Log (ikon list) → Tambah.\n"
+                              + "Contoh: 'Jeffrey Einstein, S.Komp., Ph.D.'."
                     }
                     AppTextField {
-                        id: dosenField
                         Layout.fillWidth: true
                         text: Controller.dosen
                         onTextEdited: Controller.dosen = text
@@ -77,10 +76,9 @@ Item {
                     spacing: Theme.spaceLg
                     FieldLabel {
                         text: "Row Number"
-                        info: Controller.rowNumberInfo
+                        info: "Angka di kolom 'No' pada halaman Kemahasiswaan → Aktivitas."
                     }
                     AppTextField {
-                        id: rowField
                         Layout.fillWidth: true
                         text: Controller.rowNumber
                         onTextEdited: Controller.rowNumber = text
@@ -92,10 +90,10 @@ Item {
                     spacing: Theme.spaceLg
                     FieldLabel {
                         text: "Semester"
-                        info: Controller.semesterInfo
+                        info: "Tahun & semester sesuai kolom 'Tahun Semester'.\n"
+                              + "Contoh: '2026/2027 Semester Genap'."
                     }
                     AppTextField {
-                        id: semesterField
                         Layout.fillWidth: true
                         text: Controller.semester
                         onTextEdited: Controller.semester = text
@@ -112,7 +110,6 @@ Item {
                     spacing: Theme.spaceLg
                     FieldLabel { text: "CSV File" }
                     AppTextField {
-                        id: csvField
                         Layout.fillWidth: true
                         text: Controller.csvPath
                         onTextEdited: Controller.csvPath = text
@@ -129,7 +126,6 @@ Item {
                 Layout.fillWidth: true
 
                 AppCheckBox {
-                    id: headlessBox
                     text: "Headless (no browser window)"
                     checked: Controller.headless
                     onToggled: Controller.headless = checked
@@ -140,7 +136,6 @@ Item {
                     spacing: Theme.spaceLg
                     FieldLabel { text: "Slow Mo (ms)" }
                     AppSpinBox {
-                        id: slowMoSpin
                         Layout.fillWidth: true
                         from: 50
                         to: 500
@@ -170,26 +165,6 @@ Item {
             }
 
             Item { Layout.fillHeight: true }
-        }
-    }
-
-    Connections {
-        target: Controller
-
-        function onConfigLoaded() {
-            usernameField.text = Controller.username
-            passwordField.text = Controller.password
-            dosenField.text = Controller.dosen
-            rowField.text = Controller.rowNumber
-            semesterField.text = Controller.semester
-            csvField.text = Controller.csvPath
-            headlessBox.checked = Controller.headless
-            slowMoSpin.value = Controller.slowMo
-        }
-
-        function onCsvPathChanged() {
-            if (!csvField.activeFocus)
-                csvField.text = Controller.csvPath
         }
     }
 }

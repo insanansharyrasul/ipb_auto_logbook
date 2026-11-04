@@ -208,7 +208,6 @@ ipb_auto_logbook/
 │   │   ├── popup.html      # Companion extension popup
 │   │   └── popup.js        # Logic for the companion popup
 │   └── gui/                # PyQt6 + QtQuick desktop GUI
-│       ├── _constants.py   # Shared labels, CSV columns, and info texts
 │       ├── controller.py   # QtQuick-facing app controller and CSV row model
 │       └── qml/            # Main window, pages, components, and icons
 ├── files/                  # Directory where activity proof files should be placed

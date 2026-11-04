@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+from dataclasses import asdict, replace
 from datetime import datetime
 
 from PyQt6.QtCore import (
@@ -10,7 +11,6 @@ from PyQt6.QtCore import (
     QModelIndex,
     QObject,
     QThread,
-    QUrl,
     Qt,
     pyqtProperty,
     pyqtSignal,
@@ -18,22 +18,26 @@ from PyQt6.QtCore import (
 )
 from PyQt6.QtWidgets import QFileDialog
 
-from src.automator import LogbookAutomator, LogbookConfig, resolve_to_absolute_path
-from src.gui._constants import (
-    APP_DONATORS,
-    APP_MAINTAINERS,
-    APP_VERSION,
-    BERITA_VALUES,
+from src.automator import (
     CSV_COLUMNS,
-    DOSEN_INFO,
-    ROW_NUMBER_INFO,
-    SEMESTER_INFO,
-    TIPE_VALUES,
+    LogbookAutomator,
+    LogbookConfig,
+    resolve_to_absolute_path,
 )
+
+_ROLE0 = int(Qt.ItemDataRole.UserRole)
+_DEFAULTS = {"tipe": "offline", "berita": "kegiatan"}
+_CSV_FILTERS = ["CSV files (*.csv)", "All files (*)"]
+_JSON_FILTERS = ["JSON files (*.json)", "All files (*)"]
+
+
+def _normalized(row: dict) -> dict[str, str]:
+    """A row with every CSV column, blank tipe/berita filled with defaults."""
+    return {c: str(row.get(c) or _DEFAULTS.get(c, "")) for c in CSV_COLUMNS}
 
 
 class LogbookRowsModel(QAbstractListModel):
-    """Editable list of CSV rows, one QAbstractListModel role per column."""
+    """Editable list of CSV rows, one role per column."""
 
     countChanged = pyqtSignal()
 
@@ -44,38 +48,16 @@ class LogbookRowsModel(QAbstractListModel):
     # -- QAbstractListModel ------------------------------------------------
 
     def roleNames(self) -> dict[int, bytes]:  # noqa: N802 (Qt override)
-        return {
-            int(Qt.ItemDataRole.UserRole) + i: name.encode()
-            for i, name in enumerate(CSV_COLUMNS)
-        }
+        return {_ROLE0 + i: name.encode() for i, name in enumerate(CSV_COLUMNS)}
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
         return 0 if parent.isValid() else len(self._rows)
 
     def data(self, index: QModelIndex, role: int = 0):
-        if not index.isValid() or not 0 <= index.row() < len(self._rows):
-            return None
-        col = role - int(Qt.ItemDataRole.UserRole)
-        if 0 <= col < len(CSV_COLUMNS):
-            return self._rows[index.row()].get(CSV_COLUMNS[col], "")
+        col = role - _ROLE0
+        if index.isValid() and 0 <= col < len(CSV_COLUMNS):
+            return self._rows[index.row()][CSV_COLUMNS[col]]
         return None
-
-    def setData(self, index: QModelIndex, value, role: int = 0) -> bool:  # noqa: N802
-        if not index.isValid() or not 0 <= index.row() < len(self._rows):
-            return False
-        col = role - int(Qt.ItemDataRole.UserRole)
-        if not 0 <= col < len(CSV_COLUMNS):
-            return False
-        self._rows[index.row()][CSV_COLUMNS[col]] = str(value)
-        self.dataChanged.emit(index, index, [role])
-        return True
-
-    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
-        return (
-            Qt.ItemFlag.ItemIsEnabled
-            | Qt.ItemFlag.ItemIsSelectable
-            | Qt.ItemFlag.ItemIsEditable
-        )
 
     # -- QML API -----------------------------------------------------------
 
@@ -84,31 +66,22 @@ class LogbookRowsModel(QAbstractListModel):
         return len(self._rows)
 
     @pyqtSlot(int, str, str)
-    def setField(self, row: int, column: str, value: str) -> None:
+    def setField(self, row: int, column: str, value: str) -> None:  # noqa: N802
         if column not in CSV_COLUMNS or not 0 <= row < len(self._rows):
             return
-        self.setData(self.index(row, 0), value, self._role(column))
+        self._rows[row][column] = value
+        index = self.index(row, 0)
+        self.dataChanged.emit(index, index, [_ROLE0 + CSV_COLUMNS.index(column)])
 
     @pyqtSlot()
-    def addRow(self) -> None:
+    def addRow(self) -> None:  # noqa: N802
         self.beginInsertRows(QModelIndex(), len(self._rows), len(self._rows))
-        self._rows.append(
-            {
-                "tanggal": "",
-                "mulai": "",
-                "selesai": "",
-                "keterangan": "",
-                "file": "",
-                "tipe": "offline",
-                "lokasi": "",
-                "berita": "kegiatan",
-            }
-        )
+        self._rows.append(_normalized({}))
         self.endInsertRows()
         self.countChanged.emit()
 
     @pyqtSlot()
-    def removeLastRow(self) -> None:
+    def removeLastRow(self) -> None:  # noqa: N802
         if not self._rows:
             return
         last = len(self._rows) - 1
@@ -121,24 +94,12 @@ class LogbookRowsModel(QAbstractListModel):
 
     def load(self, rows: list[dict[str, str]]) -> None:
         self.beginResetModel()
-        self._rows = []
-        for row in rows:
-            self._rows.append(
-                {
-                    col: str(row.get(col) or "")
-                    or ("offline" if col == "tipe" else "kegiatan" if col == "berita" else "")
-                    for col in CSV_COLUMNS
-                }
-            )
+        self._rows = [_normalized(row) for row in rows]
         self.endResetModel()
         self.countChanged.emit()
 
     def to_rows(self) -> list[dict[str, str]]:
         return [dict(row) for row in self._rows]
-
-    @staticmethod
-    def _role(column: str) -> int:
-        return int(Qt.ItemDataRole.UserRole) + CSV_COLUMNS.index(column)
 
 
 class _RunWorker(QThread):
@@ -164,18 +125,21 @@ class _RunWorker(QThread):
             self.done.emit(False)
 
 
+def _config_prop(type_, field: str, notify):
+    """Read/write Qt property backed by one LogbookConfig field."""
+
+    def fset(self: AppController, value) -> None:
+        if getattr(self._config, field) != value:
+            setattr(self._config, field, value)
+            self.configChanged.emit()
+
+    return pyqtProperty(type_, lambda self: getattr(self._config, field), fset, notify=notify)
+
+
 class AppController(QObject):
     """Exposes configuration, CSV data, and run state to the QML UI."""
 
-    configLoaded = pyqtSignal()
-    usernameChanged = pyqtSignal()
-    passwordChanged = pyqtSignal()
-    dosenChanged = pyqtSignal()
-    rowNumberChanged = pyqtSignal()
-    semesterChanged = pyqtSignal()
-    csvPathChanged = pyqtSignal()
-    headlessChanged = pyqtSignal()
-    slowMoChanged = pyqtSignal()
+    configChanged = pyqtSignal()
     runningChanged = pyqtSignal()
     stoppingChanged = pyqtSignal()
     statusTextChanged = pyqtSignal()
@@ -183,16 +147,18 @@ class AppController(QObject):
     progressChanged = pyqtSignal()
     logTextChanged = pyqtSignal()
 
+    username = _config_prop(str, "username", configChanged)
+    password = _config_prop(str, "password", configChanged)
+    dosen = _config_prop(str, "dosen", configChanged)
+    rowNumber = _config_prop(str, "row_number", configChanged)
+    semester = _config_prop(str, "semester", configChanged)
+    csvPath = _config_prop(str, "csv_path", configChanged)
+    headless = _config_prop(bool, "headless", configChanged)
+    slowMo = _config_prop(int, "slow_mo", configChanged)
+
     def __init__(self) -> None:
         super().__init__()
-        self._username = ""
-        self._password = ""
-        self._dosen = ""
-        self._row_number = ""
-        self._semester = ""
-        self._csv_path = "data.csv"
-        self._headless = False
-        self._slow_mo = 200
+        self._config = LogbookConfig()
         self._running = False
         self._stopping = False
         self._status_text = "Ready"
@@ -206,90 +172,6 @@ class AppController(QObject):
     @pyqtProperty(QObject, constant=True)
     def rows(self) -> LogbookRowsModel:
         return self._rows_model
-
-    # ------------------------------------------------------------------
-    # Configuration properties
-    # ------------------------------------------------------------------
-
-    @pyqtProperty(str, notify=usernameChanged)
-    def username(self) -> str:
-        return self._username
-
-    @username.setter
-    def username(self, value: str) -> None:
-        if self._username != value:
-            self._username = value
-            self.usernameChanged.emit()
-
-    @pyqtProperty(str, notify=passwordChanged)
-    def password(self) -> str:
-        return self._password
-
-    @password.setter
-    def password(self, value: str) -> None:
-        if self._password != value:
-            self._password = value
-            self.passwordChanged.emit()
-
-    @pyqtProperty(str, notify=dosenChanged)
-    def dosen(self) -> str:
-        return self._dosen
-
-    @dosen.setter
-    def dosen(self, value: str) -> None:
-        if self._dosen != value:
-            self._dosen = value
-            self.dosenChanged.emit()
-
-    @pyqtProperty(str, notify=rowNumberChanged)
-    def rowNumber(self) -> str:
-        return self._row_number
-
-    @rowNumber.setter
-    def rowNumber(self, value: str) -> None:
-        if self._row_number != value:
-            self._row_number = value
-            self.rowNumberChanged.emit()
-
-    @pyqtProperty(str, notify=semesterChanged)
-    def semester(self) -> str:
-        return self._semester
-
-    @semester.setter
-    def semester(self, value: str) -> None:
-        if self._semester != value:
-            self._semester = value
-            self.semesterChanged.emit()
-
-    @pyqtProperty(str, notify=csvPathChanged)
-    def csvPath(self) -> str:
-        return self._csv_path
-
-    @csvPath.setter
-    def csvPath(self, value: str) -> None:
-        if self._csv_path != value:
-            self._csv_path = value
-            self.csvPathChanged.emit()
-
-    @pyqtProperty(bool, notify=headlessChanged)
-    def headless(self) -> bool:
-        return self._headless
-
-    @headless.setter
-    def headless(self, value: bool) -> None:
-        if self._headless != value:
-            self._headless = value
-            self.headlessChanged.emit()
-
-    @pyqtProperty(int, notify=slowMoChanged)
-    def slowMo(self) -> int:
-        return self._slow_mo
-
-    @slowMo.setter
-    def slowMo(self, value: int) -> None:
-        if self._slow_mo != value:
-            self._slow_mo = value
-            self.slowMoChanged.emit()
 
     # ------------------------------------------------------------------
     # Run state
@@ -324,49 +206,30 @@ class AppController(QObject):
         return self._log_text
 
     # ------------------------------------------------------------------
-    # Constants / read-only data for QML
+    # File actions
     # ------------------------------------------------------------------
 
-    @pyqtProperty("QVariantList", constant=True)
-    def tipeValues(self) -> list[str]:
-        return TIPE_VALUES
+    # QML's FileDialog needs the Qt.labs.folderlistmodel module, which the
+    # PyQt6 wheel does not ship, so file pickers use the QtWidgets dialog.
+    def _choose_file(self, title: str, filters: list[str], save_suffix: str = "") -> str:
+        """Local path the user picked, or "" if cancelled. save_suffix makes it a save dialog."""
+        dialog = QFileDialog(None, title)
+        dialog.setNameFilters(filters)
+        if save_suffix:
+            dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+            dialog.setDefaultSuffix(save_suffix)
+        if dialog.exec() != QFileDialog.DialogCode.Accepted:
+            return ""
+        return next(iter(dialog.selectedFiles()), "")
 
-    @pyqtProperty("QVariantList", constant=True)
-    def beritaValues(self) -> list[str]:
-        return BERITA_VALUES
+    @pyqtSlot()
+    def chooseCsvFile(self) -> None:
+        if path := self._choose_file("Select CSV file", _CSV_FILTERS):
+            self.csvPath = path
 
-    @pyqtProperty("QVariantList", constant=True)
-    def maintainers(self) -> list[str]:
-        return APP_MAINTAINERS
-
-    @pyqtProperty("QVariantList", constant=True)
-    def donators(self) -> list[str]:
-        return APP_DONATORS
-
-    @pyqtProperty(str, constant=True)
-    def appVersion(self) -> str:
-        return APP_VERSION
-
-    @pyqtProperty(str, constant=True)
-    def dosenInfo(self) -> str:
-        return DOSEN_INFO
-
-    @pyqtProperty(str, constant=True)
-    def rowNumberInfo(self) -> str:
-        return ROW_NUMBER_INFO
-
-    @pyqtProperty(str, constant=True)
-    def semesterInfo(self) -> str:
-        return SEMESTER_INFO
-
-    # ------------------------------------------------------------------
-    # Config file actions
-    # ------------------------------------------------------------------
-
-    @pyqtSlot(QUrl)
-    def saveConfigTo(self, url: QUrl) -> None:
-        path = url.toLocalFile()
-        if not path:
+    @pyqtSlot()
+    def chooseSaveConfig(self) -> None:
+        if not (path := self._choose_file("Save config", _JSON_FILTERS, "json")):
             return
         try:
             self._gather_config().save_to_file(path)
@@ -374,111 +237,29 @@ class AppController(QObject):
         except Exception as exc:
             self._log(f"Failed to save config: {exc}")
 
-    @pyqtSlot(QUrl)
-    def loadConfigFrom(self, url: QUrl) -> None:
-        path = url.toLocalFile()
-        if not path:
+    @pyqtSlot()
+    def chooseLoadConfig(self) -> None:
+        if not (path := self._choose_file("Load config", _JSON_FILTERS)):
             return
         try:
-            self._apply_config(LogbookConfig.load_from_file(path))
+            self._config = LogbookConfig.load_from_file(path)  # password blank
+            self.configChanged.emit()
             self._log(f"Loaded config from {path} (re-enter password)")
         except Exception as exc:
             self._log(f"Failed to load config: {exc}")
 
-    @pyqtSlot(QUrl)
-    def setCsvPathFromUrl(self, url: QUrl) -> None:
-        path = url.toLocalFile()
-        if path:
-            self.csvPath = path
-
-    # QML's FileDialog needs the Qt.labs.folderlistmodel module, which the
-    # PyQt6 wheel does not ship, so file pickers use the QtWidgets dialog.
-    def _choose_file(
-        self, title: str, filters: list[str], *, save: bool = False, suffix: str = ""
-    ) -> QUrl | None:
-        dialog = QFileDialog(None, title)
-        dialog.setNameFilters(filters)
-        if save:
-            dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
-            dialog.setDefaultSuffix(suffix)
-        if dialog.exec() != QFileDialog.DialogCode.Accepted:
-            return None
-        urls = dialog.selectedUrls()
-        return urls[0] if urls else None
-
-    @pyqtSlot()
-    def chooseCsvFile(self) -> None:
-        url = self._choose_file("Select CSV file", ["CSV files (*.csv)", "All files (*)"])
-        if url:
-            self.setCsvPathFromUrl(url)
-
-    @pyqtSlot()
-    def chooseSaveConfig(self) -> None:
-        url = self._choose_file(
-            "Save config", ["JSON files (*.json)", "All files (*)"], save=True, suffix="json"
-        )
-        if url:
-            self.saveConfigTo(url)
-
-    @pyqtSlot()
-    def chooseLoadConfig(self) -> None:
-        url = self._choose_file("Load config", ["JSON files (*.json)", "All files (*)"])
-        if url:
-            self.loadConfigFrom(url)
-
     @pyqtSlot()
     def chooseLoadCsv(self) -> None:
-        url = self._choose_file("Select CSV file", ["CSV files (*.csv)", "All files (*)"])
-        if url:
-            self.loadCsvFromUrl(url)
+        if path := self._choose_file("Select CSV file", _CSV_FILTERS):
+            self.csvPath = path
+            self.loadCsv()
 
     @pyqtSlot()
     def chooseSaveCsv(self) -> None:
-        url = self._choose_file(
-            "Save CSV", ["CSV files (*.csv)", "All files (*)"], save=True, suffix="csv"
-        )
-        if url:
-            self.saveCsvTo(url)
-
-    @pyqtSlot(int)
-    def chooseRowFile(self, row: int) -> None:
-        url = self._choose_file("Select file", ["All files (*)"])
-        if url:
-            self.setRowFile(row, url)
-
-    # ------------------------------------------------------------------
-    # CSV actions
-    # ------------------------------------------------------------------
-
-    @pyqtSlot()
-    def loadCsv(self) -> None:
-        path = self._csv_path.strip()
-        if not path:
-            self._log("⚠ No CSV file selected.")
+        if not (path := self._choose_file("Save CSV", _CSV_FILTERS, "csv")):
             return
         try:
-            abs_path = resolve_to_absolute_path(path)
-            with open(abs_path, newline="", encoding="utf-8") as handle:
-                rows = list(csv.DictReader(handle))
-            self.rows.load(rows)
-            while self.rows.count < 3:
-                self.rows.addRow()
-            self._log(f"Loaded {len(rows)} rows from {path}")
-        except Exception as exc:
-            self._log(f"Failed to load CSV: {exc}")
-
-    @pyqtSlot(QUrl)
-    def loadCsvFromUrl(self, url: QUrl) -> None:
-        self.setCsvPathFromUrl(url)
-        self.loadCsv()
-
-    @pyqtSlot(QUrl)
-    def saveCsvTo(self, url: QUrl) -> None:
-        path = url.toLocalFile()
-        if not path:
-            return
-        try:
-            data = self.rows.to_rows()
+            data = self._rows_model.to_rows()
             with open(path, "w", newline="", encoding="utf-8") as handle:
                 writer = csv.DictWriter(handle, fieldnames=CSV_COLUMNS)
                 writer.writeheader()
@@ -487,11 +268,26 @@ class AppController(QObject):
         except Exception as exc:
             self._log(f"Failed to save CSV: {exc}")
 
-    @pyqtSlot(int, QUrl)
-    def setRowFile(self, row: int, url: QUrl) -> None:
-        path = url.toLocalFile()
-        if path:
-            self.rows.setField(row, "file", path)
+    @pyqtSlot(int)
+    def chooseRowFile(self, row: int) -> None:
+        if path := self._choose_file("Select file", ["All files (*)"]):
+            self._rows_model.setField(row, "file", path)
+
+    @pyqtSlot()
+    def loadCsv(self) -> None:
+        path = self._config.csv_path.strip()
+        if not path:
+            self._log("⚠ No CSV file selected.")
+            return
+        try:
+            with open(resolve_to_absolute_path(path), newline="", encoding="utf-8") as handle:
+                rows = list(csv.DictReader(handle))
+            self._rows_model.load(rows)
+            while self._rows_model.count < 3:
+                self._rows_model.addRow()
+            self._log(f"Loaded {len(rows)} rows from {path}")
+        except Exception as exc:
+            self._log(f"Failed to load CSV: {exc}")
 
     # ------------------------------------------------------------------
     # Automation actions
@@ -536,27 +332,9 @@ class AppController(QObject):
     # ------------------------------------------------------------------
 
     def _gather_config(self) -> LogbookConfig:
-        return LogbookConfig(
-            username=self._username.strip(),
-            password=self._password.strip(),
-            dosen=self._dosen.strip(),
-            row_number=self._row_number.strip(),
-            semester=self._semester.strip(),
-            csv_path=self._csv_path.strip(),
-            headless=self._headless,
-            slow_mo=self._slow_mo,
-        )
-
-    def _apply_config(self, config: LogbookConfig) -> None:
-        self.username = config.username
-        self.password = config.password  # blank: never stored on disk
-        self.dosen = config.dosen
-        self.rowNumber = config.row_number
-        self.semester = config.semester
-        self.csvPath = config.csv_path
-        self.headless = config.headless
-        self.slowMo = config.slow_mo
-        self.configLoaded.emit()
+        """Current config with surrounding whitespace stripped from text fields."""
+        c = self._config
+        return replace(c, **{k: v.strip() for k, v in asdict(c).items() if isinstance(v, str)})
 
     def _set_running(self, running: bool) -> None:
         self._running = running
@@ -602,5 +380,5 @@ class AppController(QObject):
         self._append_log(f"[{stamp}] {message}")
 
     def _append_log(self, message: str) -> None:
-        self._log_text = f"{self._log_text}{message}\n" if self._log_text else f"{message}\n"
+        self._log_text += f"{message}\n"
         self.logTextChanged.emit()

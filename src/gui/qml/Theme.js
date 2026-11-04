@@ -29,7 +29,6 @@ var spaceSm = 8
 var spaceMd = 12
 var spaceLg = 16
 var spaceXl = 24
-var spaceXxl = 32
 
 // Layout
 var radius = 10

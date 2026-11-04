@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import App 1.0
 import "../Theme.js" as Theme
 import "../components"
 
@@ -33,7 +32,7 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: "Automated logbook filler for IPB University Student Portal · v" + Controller.appVersion
+                text: "Automated logbook filler for IPB University Student Portal · v" + Qt.application.version
                 color: Theme.muted
                 font.pixelSize: Theme.fontSize
             }
@@ -43,7 +42,11 @@ Item {
                 Layout.fillWidth: true
 
                 Repeater {
-                    model: Controller.maintainers
+                    model: [
+                        "Insan Anshary Rasul (https://github.com/insanansharyrasul)",
+                        "Aghnat Hasya Sayyidina (https://github.com/aghnaths)",
+                        "Rafif Muhammad Faras (https://github.com/Raphcel)"
+                    ]
 
                     Text {
                         required property string modelData
@@ -60,7 +63,7 @@ Item {
                 Layout.fillWidth: true
 
                 Repeater {
-                    model: Controller.donators
+                    model: ["Walid Nadirul Ahnaf (https://github.com/walidan-nadilaw)"]
 
                     Text {
                         required property string modelData

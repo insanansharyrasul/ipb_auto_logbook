@@ -8,6 +8,9 @@ import "../components"
 Item {
     id: page
 
+    readonly property var tipeValues: ["offline", "online", "hybrid"]
+    readonly property var beritaValues: ["kegiatan", "ujian", "bimbingan"]
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Theme.pageMargin
@@ -168,8 +171,8 @@ Item {
                                 AppComboBox {
                                     compact: true
                                     Layout.preferredWidth: Theme.columnWidths[5]
-                                    model: Controller.tipeValues
-                                    currentIndex: Math.max(0, Controller.tipeValues.indexOf(rowRoot.tipe))
+                                    model: page.tipeValues
+                                    currentIndex: Math.max(0, page.tipeValues.indexOf(rowRoot.tipe))
                                     onActivated: Controller.rows.setField(rowRoot.index, "tipe", currentText)
                                 }
 
@@ -183,8 +186,8 @@ Item {
                                 AppComboBox {
                                     compact: true
                                     Layout.preferredWidth: Theme.columnWidths[7]
-                                    model: Controller.beritaValues
-                                    currentIndex: Math.max(0, Controller.beritaValues.indexOf(rowRoot.berita))
+                                    model: page.beritaValues
+                                    currentIndex: Math.max(0, page.beritaValues.indexOf(rowRoot.berita))
                                     onActivated: Controller.rows.setField(rowRoot.index, "berita", currentText)
                                 }
 
