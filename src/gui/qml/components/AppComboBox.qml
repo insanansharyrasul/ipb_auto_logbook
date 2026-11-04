@@ -13,7 +13,7 @@ ComboBox {
     rightPadding: 28
 
     background: Rectangle {
-        radius: compact ? Theme.radiusXs : Theme.radiusSm
+        radius: root.compact ? Theme.radiusXs : Theme.radiusSm
         color: Theme.surface
         border.width: 1
         border.color: root.hovered ? Theme.borderStrong : Theme.border
