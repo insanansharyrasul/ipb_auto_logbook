@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Dialogs
 import QtQuick.Layouts
 import App 1.0
 import "../Theme.js" as Theme
@@ -8,8 +7,6 @@ import "../components"
 
 Item {
     id: page
-
-    property int pendingFileRow: -1
 
     ColumnLayout {
         anchors.fill: parent
@@ -24,7 +21,7 @@ Item {
                 text: "Load CSV from Config"
                 onClicked: {
                     if (Controller.csvPath === "")
-                        loadCsvDialog.open()
+                        Controller.chooseLoadCsv()
                     else
                         Controller.loadCsv()
                 }
@@ -40,7 +37,7 @@ Item {
             AppButton {
                 text: "Save CSV"
                 variant: "primary"
-                onClicked: saveCsvDialog.open()
+                onClicked: Controller.chooseSaveCsv()
             }
             Item { Layout.fillWidth: true }
         }
@@ -164,10 +161,7 @@ Item {
                                         compact: true
                                         text: "…"
                                         Layout.preferredWidth: 32
-                                        onClicked: {
-                                            page.pendingFileRow = rowRoot.index
-                                            fileDialog.open()
-                                        }
+                                        onClicked: Controller.chooseRowFile(rowRoot.index)
                                     }
                                 }
 
@@ -200,32 +194,6 @@ Item {
                     }
                 }
             }
-        }
-    }
-
-    FileDialog {
-        id: loadCsvDialog
-        title: "Select CSV file"
-        nameFilters: ["CSV files (*.csv)", "All files (*)"]
-        onAccepted: Controller.loadCsvFromUrl(selectedFile)
-    }
-
-    FileDialog {
-        id: saveCsvDialog
-        title: "Save CSV"
-        fileMode: FileDialog.SaveFile
-        defaultSuffix: "csv"
-        nameFilters: ["CSV files (*.csv)", "All files (*)"]
-        onAccepted: Controller.saveCsvTo(selectedFile)
-    }
-
-    FileDialog {
-        id: fileDialog
-        title: "Select file"
-        onAccepted: {
-            if (page.pendingFileRow >= 0)
-                Controller.setRowFile(page.pendingFileRow, selectedFile)
-            page.pendingFileRow = -1
         }
     }
 }

@@ -16,6 +16,7 @@ from PyQt6.QtCore import (
     pyqtSignal,
     pyqtSlot,
 )
+from PyQt6.QtWidgets import QFileDialog
 
 from src.automator import LogbookAutomator, LogbookConfig, resolve_to_absolute_path
 from src.gui._constants import (
@@ -389,6 +390,61 @@ class AppController(QObject):
         path = url.toLocalFile()
         if path:
             self.csvPath = path
+
+    # QML's FileDialog needs the Qt.labs.folderlistmodel module, which the
+    # PyQt6 wheel does not ship, so file pickers use the QtWidgets dialog.
+    def _choose_file(
+        self, title: str, filters: list[str], *, save: bool = False, suffix: str = ""
+    ) -> QUrl | None:
+        dialog = QFileDialog(None, title)
+        dialog.setNameFilters(filters)
+        if save:
+            dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+            dialog.setDefaultSuffix(suffix)
+        if dialog.exec() != QFileDialog.DialogCode.Accepted:
+            return None
+        urls = dialog.selectedUrls()
+        return urls[0] if urls else None
+
+    @pyqtSlot()
+    def chooseCsvFile(self) -> None:
+        url = self._choose_file("Select CSV file", ["CSV files (*.csv)", "All files (*)"])
+        if url:
+            self.setCsvPathFromUrl(url)
+
+    @pyqtSlot()
+    def chooseSaveConfig(self) -> None:
+        url = self._choose_file(
+            "Save config", ["JSON files (*.json)", "All files (*)"], save=True, suffix="json"
+        )
+        if url:
+            self.saveConfigTo(url)
+
+    @pyqtSlot()
+    def chooseLoadConfig(self) -> None:
+        url = self._choose_file("Load config", ["JSON files (*.json)", "All files (*)"])
+        if url:
+            self.loadConfigFrom(url)
+
+    @pyqtSlot()
+    def chooseLoadCsv(self) -> None:
+        url = self._choose_file("Select CSV file", ["CSV files (*.csv)", "All files (*)"])
+        if url:
+            self.loadCsvFromUrl(url)
+
+    @pyqtSlot()
+    def chooseSaveCsv(self) -> None:
+        url = self._choose_file(
+            "Save CSV", ["CSV files (*.csv)", "All files (*)"], save=True, suffix="csv"
+        )
+        if url:
+            self.saveCsvTo(url)
+
+    @pyqtSlot(int)
+    def chooseRowFile(self, row: int) -> None:
+        url = self._choose_file("Select file", ["All files (*)"])
+        if url:
+            self.setRowFile(row, url)
 
     # ------------------------------------------------------------------
     # CSV actions

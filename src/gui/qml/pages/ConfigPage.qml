@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Dialogs
 import QtQuick.Layouts
 import App 1.0
 import "../Theme.js" as Theme
@@ -120,7 +119,7 @@ Item {
                     }
                     AppButton {
                         text: "Browse"
-                        onClicked: csvDialog.open()
+                        onClicked: Controller.chooseCsvFile()
                     }
                 }
             }
@@ -161,11 +160,11 @@ Item {
                 AppButton {
                     text: "Save Config"
                     variant: "primary"
-                    onClicked: saveConfigDialog.open()
+                    onClicked: Controller.chooseSaveConfig()
                 }
                 AppButton {
                     text: "Load Config"
-                    onClicked: loadConfigDialog.open()
+                    onClicked: Controller.chooseLoadConfig()
                 }
                 Item { Layout.fillWidth: true }
             }
@@ -192,28 +191,5 @@ Item {
             if (!csvField.activeFocus)
                 csvField.text = Controller.csvPath
         }
-    }
-
-    FileDialog {
-        id: csvDialog
-        title: "Select CSV file"
-        nameFilters: ["CSV files (*.csv)", "All files (*)"]
-        onAccepted: Controller.setCsvPathFromUrl(selectedFile)
-    }
-
-    FileDialog {
-        id: saveConfigDialog
-        title: "Save config"
-        fileMode: FileDialog.SaveFile
-        defaultSuffix: "json"
-        nameFilters: ["JSON files (*.json)", "All files (*)"]
-        onAccepted: Controller.saveConfigTo(selectedFile)
-    }
-
-    FileDialog {
-        id: loadConfigDialog
-        title: "Load config"
-        nameFilters: ["JSON files (*.json)", "All files (*)"]
-        onAccepted: Controller.loadConfigFrom(selectedFile)
     }
 }
