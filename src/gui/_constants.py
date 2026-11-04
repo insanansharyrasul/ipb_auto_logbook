@@ -1,4 +1,4 @@
-"""Shared constants used across GUI tabs."""
+"""Shared constants for the GUI pages."""
 
 from __future__ import annotations
 

@@ -14,6 +14,9 @@ for pkg in ("playwright",):
     binaries += b
     hiddenimports += h
 
+datas += [("src/gui/qml", "src/gui/qml")]
+hiddenimports += ["PyQt6.QtQml", "PyQt6.QtQuick", "PyQt6.QtSvg"]
+
 a = Analysis(
     ["gui_app.py"],
     pathex=[],
